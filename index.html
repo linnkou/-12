@@ -99,6 +99,7 @@ box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 width: 800px;
 height: 600px;
 margin: 20px auto;
+overflow: hidden;
 }
 canvas {
 display: block;
@@ -217,19 +218,36 @@ width: 220px;
 }
 }
 @media (max-width: 600px) {
+body {
+flex-direction: column;
+}
 .sidebar {
-display: none;
+display: none; /* يمكنك استبداله بقائمة منسدلة */
 }
 .main-content {
 padding: 10px;
 }
+.canvas-container {
+width: 100%;
+height: auto;
+border: none;
+box-shadow: none;
+margin: 0;
+}
+canvas {
+width: 100%;
+height: auto;
+}
 .tools {
+width: 100%;
+flex-wrap: wrap;
 gap: 8px;
 font-size: 12px;
+padding: 10px;
 }
 .tool-btn {
-padding: 8px 10px;
-font-size: 12px;
+padding: 12px;
+font-size: 16px;
 }
 }
 </style>
@@ -249,7 +267,7 @@ font-size: 12px;
 <li onclick="activateTool('delete')"><i class="fas fa-trash"></i>مسح</li>
 </ul>
 </div>
-<!-- قسم المستقيمات تم نقله هنا -->
+<!-- قسم المستقيمات -->
 <div class="tool-category">
 <h3>المستقيمات</h3>
 <ul class="tool-list">
@@ -315,7 +333,6 @@ font-size: 12px;
 <i class="fas fa-hand-paper"></i>
 <span>تحريك الورقة</span>
 </div>
-<!-- إضافة زر تحديد عنصر -->
 <div class="tool-btn" id="selectTool" onclick="activateTool('select')">
 <i class="fas fa-mouse-pointer"></i>
 <span>تحديد عنصر</span>
@@ -334,7 +351,7 @@ font-size: 12px;
 <!-- عنصر رفع الصورة المخفي -->
 <input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
 
-<!-- النوافذ المنبثقة تبقى كما هي -->
+<!-- النوافذ المنبثقة -->
 <div id="shapeModal" class="modal">
 <div class="modal-content">
 <h4 id="shapeModalTitle">إعدادات الشكل</h4>
@@ -520,6 +537,7 @@ let polyFreePoints = [];
 // إعدادات النقطة بعد تأكيدها
 let pointSettings = null;
 
+// إنشاء الكانفاس
 const canvas = new fabric.Canvas("drawingCanvas", {
 renderOnAddRemove: true,
 selection: true,
@@ -874,7 +892,7 @@ canvas.add(segmentGroup);
 
 /* --- باقي الدوال --- */
 function drawCircle() {
-// استدعاء نافذة إعدادات الدائرة عند الاستخدام.
+// يتم استدعاء نافذة إعدادات الدائرة عند الاستخدام.
 }
 function drawRay() {
 const startX = canvas.getWidth() / 2;
@@ -907,7 +925,8 @@ function onCanvasPolyFreeMouseDown(e) {
 const pointer = canvas.getPointer(e.e);
 if (polyFreePoints.length > 0) {
 const firstPoint = polyFreePoints[0];
-const dx = pointer.x - firstPoint.x, dy = pointer.y - firstPoint.y;
+const dx = pointer.x - firstPoint.x,
+dy = pointer.y - firstPoint.y;
 if (Math.sqrt(dx * dx + dy * dy) < 10 && polyFreePoints.length >= 3) {
 const poly = new fabric.Polygon(polyFreePoints, {
 fill: "transparent",
@@ -978,7 +997,7 @@ canvas.off("mouse:down", onCanvasPolyRegularMouseDown);
 activeTool = null;
 }
 function onCanvasPolyRegularMouseDown(e) {
-// تم استخدام النافذة المنبثقة لهذا المثال.
+// يتم استخدام النافذة المنبثقة لهذا المثال.
 }
 
 /* --- عرض المحاور "المعلم" --- */
@@ -1110,7 +1129,6 @@ let heightCm = parseInt(document.getElementById("saveHeightInput").value) || (ca
 let widthPx = widthCm * CM_IN_PX;
 let heightPx = heightCm * CM_IN_PX;
 let multiplier = Math.min(widthPx / canvas.getWidth(), heightPx / canvas.getHeight());
-// تحديد الخلفية البيضاء عند الحفظ باستخدام الخاصية backgroundColor
 const dataURL = canvas.toDataURL({ multiplier: multiplier, backgroundColor: "#ffffff" });
 const link = document.createElement("a");
 link.download = "work.png";
@@ -1132,8 +1150,8 @@ canvas.setZoom(zoom / 1.1);
 canvas.requestRenderAll();
 }
 canvas.on("mouse:wheel", function(opt) {
-var delta = opt.e.deltaY;
-var zoom = canvas.getZoom();
+let delta = opt.e.deltaY;
+let zoom = canvas.getZoom();
 zoom *= 0.999 ** delta;
 if (zoom > 20) zoom = 20;
 if (zoom < 0.01) zoom = 0.01;
@@ -1142,7 +1160,7 @@ opt.e.preventDefault();
 opt.e.stopPropagation();
 });
 
-/* --- تحريك اللوحة --- */
+/* --- تحريك اللوحة (Pan) --- */
 let isPanning = false;
 let lastPosX, lastPosY;
 function startPan(e) {
@@ -1164,6 +1182,22 @@ canvas.relativePan({ x: deltaX, y: deltaY });
 function endPan(e) {
 isPanning = false;
 }
+
+// دعم للأحداث اللمسية لتكبير/تصغير ولوحة الرسم
+function handleTouchStart(e) {
+if (e.touches && e.touches.length === 1) {
+startPan({ e: e.touches[0] });
+}
+}
+function handleTouchMove(e) {
+if (e.touches && e.touches.length === 1 && isPanning) {
+panMove({ e: e.touches[0] });
+}
+}
+function handleTouchEnd(e) {
+endPan(e);
+}
+
 canvas.off("mouse:down");
 canvas.on("mouse:down", function(e) {
 if (activeTool !== "move" && activeTool !== "select" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
@@ -1180,6 +1214,11 @@ if (isPanning) { panMove(e); }
 canvas.on("mouse:up", function(e) {
 if (isPanning) { endPan(e); }
 });
+
+// إضافة دعم للأحداث اللمسية على الكانفاس
+canvas.upperCanvasEl.addEventListener("touchstart", handleTouchStart, false);
+canvas.upperCanvasEl.addEventListener("touchmove", handleTouchMove, false);
+canvas.upperCanvasEl.addEventListener("touchend", handleTouchEnd, false);
 
 /* --- إعدادات قياس الزاوية --- */
 let anglePoints = [];
@@ -1477,7 +1516,25 @@ alert("الرجاء اختيار كائن واحد أو أكثر للحذف.");
 }
 window.onload = () => {
 activateTool("point");
+// تحديث حجم الكانفاس لتناسب الأجهزة المحمولة
+resizeCanvas();
 };
+
+/* --- ضبط حجم لوحة الرسم حسب حجم الشاشة --- */
+function resizeCanvas() {
+const container = document.querySelector(".canvas-container");
+if (container) {
+// نقوم بتحديد عرض الصفحة كاملاً مع قليل من الهوامش
+container.style.width = (window.innerWidth - 20) + "px";
+// يمكن تحديد ارتفاع نسبياً إلى العرض مثلاً 75%
+container.style.height = ((window.innerWidth - 20) * 0.75) + "px";
+canvas.setWidth(container.clientWidth);
+canvas.setHeight(container.clientHeight);
+canvas.calcOffset();
+canvas.requestRenderAll();
+}
+}
+window.addEventListener("resize", resizeCanvas);
 </script>
 </body>
 </html>
