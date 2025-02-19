@@ -5,22 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>برنامج الهندسة - من إعداد الأستاذ العربي بودهير عبد اللطيف</title>
 <!-- استخدام أيقونات FontAwesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+/>
 <!-- الخطوط الاحترافية -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<link
+href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Tajawal:wght@400;700&display=swap"
+rel="stylesheet"
+/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
 <style>
 /* الإعدادات العامة */
 body {
-font-family: 'Roboto Slab', 'Tajawal', sans-serif;
+font-family: "Roboto Slab", "Tajawal", sans-serif;
 margin: 0;
 padding: 0;
 background: linear-gradient(135deg, #e1f5fe, #ffffff);
+color: #333;
 display: flex;
 flex-direction: row;
 min-height: 100vh;
-color: #333;
 }
+
 /* الشريط الجانبي */
 .sidebar {
 width: 260px;
@@ -29,7 +36,10 @@ padding: 20px;
 box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
 overflow-y: auto;
 height: 100vh;
-transition: all 0.3s ease;
+transition: transform 0.3s ease;
+}
+.sidebar.hide {
+transform: translateX(-100%);
 }
 .sidebar h3 {
 font-size: 16px;
@@ -46,7 +56,7 @@ margin: 0;
 .tool-list li {
 padding: 8px 10px;
 cursor: pointer;
-transition: background .3s, transform .2s;
+transition: background 0.3s, transform 0.2s;
 border-radius: 4px;
 font-size: 14px;
 display: flex;
@@ -64,15 +74,20 @@ text-align: center;
 animation: iconBounce 1.5s infinite;
 }
 @keyframes iconBounce {
-0%, 100% { transform: translateY(0); }
-50% { transform: translateY(-4px); }
+0%,
+100% {
+transform: translateY(0);
 }
+50% {
+transform: translateY(-4px);
+}
+}
+
 /* المحتوى الرئيسي */
 .main-content {
 flex-grow: 1;
 display: flex;
 flex-direction: column;
-padding: 20px;
 }
 .header {
 background: linear-gradient(135deg, #1976d2, #1565c0);
@@ -89,6 +104,17 @@ font-size: 14px;
 margin-top: 5px;
 color: #e3f2fd;
 }
+/* زر قائمة الهواتف */
+.hamburger {
+position: absolute;
+left: 15px;
+top: 50%;
+transform: translateY(-50%);
+font-size: 24px;
+cursor: pointer;
+display: none;
+}
+
 /* لوحة الرسم */
 .canvas-container {
 border: 2px solid #1976d2;
@@ -112,7 +138,7 @@ display: flex;
 flex-wrap: wrap;
 gap: 12px;
 width: 800px;
-margin: 20px auto 0 auto;
+margin: 20px auto 0;
 padding: 15px;
 background: #fafafa;
 border-radius: 8px;
@@ -221,8 +247,19 @@ width: 220px;
 body {
 flex-direction: column;
 }
+.hamburger {
+display: block;
+}
 .sidebar {
-display: none; /* يمكنك استبداله بقائمة منسدلة */
+position: fixed;
+top: 0;
+right: 0;
+height: 100vh;
+z-index: 1200;
+transform: translateX(100%);
+}
+.sidebar.show {
+transform: translateX(0);
 }
 .main-content {
 padding: 10px;
@@ -230,9 +267,9 @@ padding: 10px;
 .canvas-container {
 width: 100%;
 height: auto;
-border: none;
-box-shadow: none;
-margin: 0;
+border: 2px solid #1976d2;
+box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+margin: 10px 0;
 }
 canvas {
 width: 100%;
@@ -240,7 +277,6 @@ height: auto;
 }
 .tools {
 width: 100%;
-flex-wrap: wrap;
 gap: 8px;
 font-size: 12px;
 padding: 10px;
@@ -254,49 +290,95 @@ font-size: 16px;
 </head>
 <body>
 <!-- الشريط الجانبي -->
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
 <div class="tool-category">
 <h3>أدوات أساسية</h3>
 <ul class="tool-list">
-<li onclick="activateTool('move')"><i class="fas fa-hand-paper"></i>تحريك الورقة</li>
-<li onclick="activateTool('select')"><i class="fas fa-mouse-pointer"></i>تحديد عنصر</li>
-<li onclick="pointToolClicked()"><i class="fas fa-dot-circle"></i>نقطة</li>
-<li onclick="activateTool('link')"><i class="fas fa-link"></i>ربط نقاط</li>
-<li onclick="activateTool('phrases')"><i class="fas fa-pencil-alt"></i>كتابة جمل/حروف</li>
-<li onclick="activateTool('angle')"><i class="fas fa-ruler-combined"></i>زاوية</li>
-<li onclick="activateTool('delete')"><i class="fas fa-trash"></i>مسح</li>
+<li onclick="activateTool('move')">
+<i class="fas fa-hand-paper"></i>تحريك الورقة
+</li>
+<li onclick="activateTool('select')">
+<i class="fas fa-mouse-pointer"></i>تحديد عنصر
+</li>
+<li onclick="pointToolClicked()">
+<i class="fas fa-dot-circle"></i>نقطة
+</li>
+<li onclick="activateTool('link')">
+<i class="fas fa-link"></i>ربط نقاط
+</li>
+<li onclick="activateTool('phrases')">
+<i class="fas fa-pencil-alt"></i>كتابة جمل/حروف
+</li>
+<li onclick="activateTool('angle')">
+<i class="fas fa-ruler-combined"></i>زاوية
+</li>
+<li onclick="activateTool('delete')">
+<i class="fas fa-trash"></i>مسح
+</li>
 </ul>
 </div>
 <!-- قسم المستقيمات -->
 <div class="tool-category">
 <h3>المستقيمات</h3>
 <ul class="tool-list">
-<li onclick="openLineModal('line')"><i class="fas fa-ruler"></i>مستقيم</li>
-<li onclick="openLineModal('segment')"><i class="fas fa-ruler-horizontal"></i>قطعة مستقيمة</li>
-<li onclick="activateTool('ray')"><i class="fas fa-long-arrow-alt-right"></i>شعاع</li>
+<li onclick="openLineModal('line')">
+<i class="fas fa-ruler"></i>مستقيم
+</li>
+<li onclick="openLineModal('segment')">
+<i class="fas fa-ruler-horizontal"></i>قطعة مستقيمة
+</li>
+<li onclick="activateTool('ray')">
+<i class="fas fa-long-arrow-alt-right"></i>شعاع
+</li>
 </ul>
 </div>
 <div class="tool-category">
 <h3>أشكال ومضلعات</h3>
 <ul class="tool-list">
-<li onclick="openShapeModal('rectangle')"><i class="fas fa-border-style"></i>مستطيل</li>
-<li onclick="openShapeModal('square')"><i class="fas fa-th-large"></i>مربع</li>
-<li onclick="openShapeModal('triangle')"><i class="fas fa-play"></i>مثلث</li>
-<li onclick="openShapeModal('rhombus')"><i class="fas fa-diamond"></i>معين</li>
-<li onclick="activateTool('polyFree')"><i class="fas fa-draw-polygon"></i>مضلع كيفي</li>
-<li onclick="openPolyRegularModal()"><i class="fas fa-shapes"></i>مضلع منتظم</li>
-<li onclick="openCircleModal()"><i class="fas fa-circle"></i>دائرة</li>
+<li onclick="openShapeModal('rectangle')">
+<i class="fas fa-border-style"></i>مستطيل
+</li>
+<li onclick="openShapeModal('square')">
+<i class="fas fa-th-large"></i>مربع
+</li>
+<li onclick="openShapeModal('triangle')">
+<i class="fas fa-play"></i>مثلث
+</li>
+<li onclick="openShapeModal('rhombus')">
+<i class="fas fa-diamond"></i>معين
+</li>
+<li onclick="activateTool('polyFree')">
+<i class="fas fa-draw-polygon"></i>مضلع كيفي
+</li>
+<li onclick="openPolyRegularModal()">
+<i class="fas fa-shapes"></i>مضلع منتظم
+</li>
+<li onclick="openCircleModal()">
+<i class="fas fa-circle"></i>دائرة
+</li>
 </ul>
 </div>
 <div class="tool-category">
 <h3>أدوات إضافية</h3>
 <ul class="tool-list">
-<li onclick="toggleTeacher()"><i class="fas fa-chalkboard"></i>المعلم</li>
-<li onclick="toggleGrid()"><i class="fas fa-th"></i>التقسيمات</li>
-<li onclick="toggleTeacherNumbers()"><i class="fas fa-sort-numeric-up"></i>أرقام المعلم</li>
-<li onclick="undoAction()"><i class="fas fa-undo"></i>تراجع</li>
-<li onclick="redoAction()"><i class="fas fa-redo"></i>إعادة</li>
-<li onclick="activateTool('save')"><i class="fas fa-save"></i>حفظ</li>
+<li onclick="toggleTeacher()">
+<i class="fas fa-chalkboard"></i>المعلم
+</li>
+<li onclick="toggleGrid()">
+<i class="fas fa-th"></i>التقسيمات
+</li>
+<li onclick="toggleTeacherNumbers()">
+<i class="fas fa-sort-numeric-up"></i>أرقام المعلم
+</li>
+<li onclick="undoAction()">
+<i class="fas fa-undo"></i>تراجع
+</li>
+<li onclick="redoAction()">
+<i class="fas fa-redo"></i>إعادة
+</li>
+<li onclick="activateTool('save')">
+<i class="fas fa-save"></i>حفظ
+</li>
 </ul>
 </div>
 </div>
@@ -304,6 +386,9 @@ font-size: 16px;
 <!-- المحتوى الرئيسي -->
 <div class="main-content">
 <div class="header">
+<span class="hamburger" onclick="toggleSidebar()">
+<i class="fas fa-bars"></i>
+</span>
 برنامج الهندسة
 <p>من إعداد الأستاذ العربي بودهير عبد اللطيف</p>
 </div>
@@ -824,7 +909,7 @@ const points = [
 { x: centerX, y: centerY - offset },
 { x: centerX + offset, y: centerY },
 { x: centerX, y: centerY + offset },
-{ x: centerX - offset, y: centerY }
+{ x: centerX - offset, y: centerY },
 ];
 const rhombus = new fabric.Polygon(points, {
 fill: fill,
@@ -867,7 +952,7 @@ const line = new fabric.Line(
 stroke: color,
 strokeWidth: thickness,
 selectable: true,
-strokeDashArray: dash
+strokeDashArray: dash,
 }
 );
 canvas.add(line);
@@ -882,7 +967,7 @@ const seg = new fabric.Line([centerX - half, centerY, centerX + half, centerY], 
 stroke: color,
 strokeWidth: thickness,
 selectable: true,
-strokeDashArray: dash
+strokeDashArray: dash,
 });
 const pt1 = createCirclePoint(centerX - half, centerY, 5, color);
 const pt2 = createCirclePoint(centerX + half, centerY, 5, color);
@@ -977,13 +1062,13 @@ drawPolyRegular(sides, radiusPx, stroke);
 closePolyModal();
 }
 function drawPolyRegular(sides, radius, stroke) {
-const center = { x: canvas.getWidth()/2, y: canvas.getHeight()/2 };
+const center = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 };
 let points = [];
 for (let i = 0; i < sides; i++) {
 let angle = (2 * Math.PI * i) / sides;
 points.push({
 x: center.x + radius * Math.cos(angle),
-y: center.y + radius * Math.sin(angle)
+y: center.y + radius * Math.sin(angle),
 });
 }
 const poly = new fabric.Polygon(points, {
@@ -1011,12 +1096,12 @@ const centerY = h / 2;
 const horizontal = new fabric.Line([0, centerY, w, centerY], {
 stroke: "#000",
 strokeWidth: 1,
-selectable: false
+selectable: false,
 });
 const vertical = new fabric.Line([centerX, 0, centerX, h], {
 stroke: "#000",
 strokeWidth: 1,
-selectable: false
+selectable: false,
 });
 teacherGroup = new fabric.Group([horizontal, vertical], { selectable: false });
 teacherGroup.nonEditable = true;
@@ -1124,8 +1209,8 @@ function closeSaveModal() {
 document.getElementById("saveModal").style.display = "none";
 }
 function confirmSaveModal() {
-let widthCm = parseInt(document.getElementById("saveWidthInput").value) || (canvas.getWidth()/CM_IN_PX);
-let heightCm = parseInt(document.getElementById("saveHeightInput").value) || (canvas.getHeight()/CM_IN_PX);
+let widthCm = parseInt(document.getElementById("saveWidthInput").value) || (canvas.getWidth() / CM_IN_PX);
+let heightCm = parseInt(document.getElementById("saveHeightInput").value) || (canvas.getHeight() / CM_IN_PX);
 let widthPx = widthCm * CM_IN_PX;
 let heightPx = heightCm * CM_IN_PX;
 let multiplier = Math.min(widthPx / canvas.getWidth(), heightPx / canvas.getHeight());
@@ -1149,7 +1234,7 @@ let zoom = canvas.getZoom();
 canvas.setZoom(zoom / 1.1);
 canvas.requestRenderAll();
 }
-canvas.on("mouse:wheel", function(opt) {
+canvas.on("mouse:wheel", function (opt) {
 let delta = opt.e.deltaY;
 let zoom = canvas.getZoom();
 zoom *= 0.999 ** delta;
@@ -1199,20 +1284,24 @@ endPan(e);
 }
 
 canvas.off("mouse:down");
-canvas.on("mouse:down", function(e) {
+canvas.on("mouse:down", function (e) {
 if (activeTool !== "move" && activeTool !== "select" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
 openPropertyModal(e.target, e.pointer.x, e.pointer.y);
 }
-if(activeTool === "point" && pointSettings){
+if (activeTool === "point" && pointSettings) {
 const pointer = canvas.getPointer(e.e);
 addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
 }
 });
-canvas.on("mouse:move", function(e) {
-if (isPanning) { panMove(e); }
+canvas.on("mouse:move", function (e) {
+if (isPanning) {
+panMove(e);
+}
 });
-canvas.on("mouse:up", function(e) {
-if (isPanning) { endPan(e); }
+canvas.on("mouse:up", function (e) {
+if (isPanning) {
+endPan(e);
+}
 });
 
 // إضافة دعم للأحداث اللمسية على الكانفاس
@@ -1243,12 +1332,12 @@ const showMeasurement = document.getElementById("showAngleCheckbox").checked;
 const direction = document.getElementById("angleDirectionSelect").value;
 let desiredAngleDeg = parseFloat(document.getElementById("desiredAngleInput").value) || 45;
 if (direction === "reversed") desiredAngleDeg = -desiredAngleDeg;
-if(anglePoints.length !== 2) return;
+if (anglePoints.length !== 2) return;
 const vertex = anglePoints[0];
 const firstEnd = anglePoints[1];
 const initialAngle = Math.atan2(firstEnd.top - vertex.top, firstEnd.left - vertex.left);
 const secondAngle = initialAngle + (desiredAngleDeg * Math.PI / 180);
-const length = Math.sqrt((firstEnd.left - vertex.left)**2 + (firstEnd.top - vertex.top)**2);
+const length = Math.sqrt((firstEnd.left - vertex.left) ** 2 + (firstEnd.top - vertex.top) ** 2);
 const secondEnd = {
 x: vertex.left + length * Math.cos(secondAngle),
 y: vertex.top + length * Math.sin(secondAngle)
@@ -1294,7 +1383,7 @@ const radiusPx = radiusCm * CM_IN_PX;
 const stroke = document.getElementById("strokeColorCircleInput").value;
 let fill = document.getElementById("fillColorCircleInput").value;
 const fillType = document.getElementById("circleFillTypeSelect").value;
-if(fillType === "empty") {
+if (fillType === "empty") {
 fill = "transparent";
 }
 const shapeType = document.getElementById("circleShapeSelect").value;
@@ -1365,7 +1454,7 @@ function openPropertyModal(obj, x, y) {
 currentPropertyObject = obj;
 document.getElementById("propStrokeColorInput").value = obj.stroke || "#000000";
 document.getElementById("propStrokeWidthInput").value = obj.strokeWidth || 1;
-if(obj.fill !== undefined) {
+if (obj.fill !== undefined) {
 document.getElementById("fillColorContainer").style.display = "block";
 document.getElementById("propFillColorInput").value = obj.fill || "#ffffff";
 } else {
@@ -1383,12 +1472,12 @@ document.getElementById("propertyModal").style.display = "none";
 currentPropertyObject = null;
 }
 function updateObjectProperties() {
-if(currentPropertyObject) {
+if (currentPropertyObject) {
 let strokeColor = document.getElementById("propStrokeColorInput").value;
 let strokeWidth = parseInt(document.getElementById("propStrokeWidthInput").value) || 1;
 currentPropertyObject.set("stroke", strokeColor);
 currentPropertyObject.set("strokeWidth", strokeWidth);
-if(currentPropertyObject.fill !== undefined) {
+if (currentPropertyObject.fill !== undefined) {
 let fillColor = document.getElementById("propFillColorInput").value;
 currentPropertyObject.set("fill", fillColor);
 }
@@ -1524,9 +1613,7 @@ resizeCanvas();
 function resizeCanvas() {
 const container = document.querySelector(".canvas-container");
 if (container) {
-// نقوم بتحديد عرض الصفحة كاملاً مع قليل من الهوامش
 container.style.width = (window.innerWidth - 20) + "px";
-// يمكن تحديد ارتفاع نسبياً إلى العرض مثلاً 75%
 container.style.height = ((window.innerWidth - 20) * 0.75) + "px";
 canvas.setWidth(container.clientWidth);
 canvas.setHeight(container.clientHeight);
@@ -1535,6 +1622,16 @@ canvas.requestRenderAll();
 }
 }
 window.addEventListener("resize", resizeCanvas);
+
+/* --- وظيفة إظهار/إخفاء الشريط الجانبي على الهواتف --- */
+function toggleSidebar() {
+const sidebar = document.getElementById("sidebar");
+if (sidebar.classList.contains("show")) {
+sidebar.classList.remove("show");
+} else {
+sidebar.classList.add("show");
+}
+}
 </script>
 </body>
 </html>
