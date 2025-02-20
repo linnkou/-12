@@ -812,7 +812,7 @@
       const D = (a * a + c * c - b * b) / (2 * a);
       const h = Math.sqrt(c * c - D * D);
       const pt3 = { x: pt1.x + D, y: pt1.y - h };
-      const triangle = new fabric.Polygon([pt1, pt2, pt3], {
+           const triangle = new fabric.Polygon([pt1, pt2, pt3], {
         fill: "transparent",
         stroke: stroke,
         strokeWidth: 2,
@@ -820,6 +820,7 @@
       });
       canvas.add(triangle);
     }
+
     function drawRhombus(offset, stroke, fill) {
       const centerX = canvas.getWidth() / 2;
       const centerY = canvas.getHeight() / 2;
@@ -1190,21 +1191,43 @@
 
     // إضافة دعم لأحداث اللمس
     canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
-      if (activeTool === "move") {
+      if (e.touches.length === 1 && activeTool === "move") {
+        // إذا كان هناك إصبع واحد والأداة النشطة هي "تحريك الورقة"
         e.preventDefault();
         startPan(e);
+      } else if (e.touches.length === 2) {
+        // إذا كان هناك إصبعين، نبدأ الزووم
+        e.preventDefault();
+        lastTouchDistance = getTouchDistance(e.touches); // حفظ المسافة الأولية بين الإصبعين
       }
     }, { passive: false });
 
     canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
-      if (activeTool === "move" && isPanning) {
+      if (e.touches.length === 1 && activeTool === "move" && isPanning) {
+        // إذا كان هناك إصبع واحد والأداة النشطة هي "تحريك الورقة"
         e.preventDefault();
         panMove(e);
+      } else if (e.touches.length === 2) {
+        // إذا كان هناك إصبعين، نطبق الزووم
+        e.preventDefault();
+        const currentDistance = getTouchDistance(e.touches); // حساب المسافة الحالية بين الإصبعين
+        if (lastTouchDistance !== null) {
+          const zoomFactor = currentDistance / lastTouchDistance; // حساب نسبة التكبير/التصغير
+          const zoom = canvas.getZoom() * zoomFactor; // تطبيق النسبة على مستوى الزووم الحالي
+          canvas.setZoom(zoom); // تعيين مستوى الزووم الجديد
+          canvas.requestRenderAll(); // إعادة رسم اللوحة
+        }
+        lastTouchDistance = currentDistance; // تحديث المسافة الأخيرة
       }
     }, { passive: false });
 
     canvas.upperCanvasEl.addEventListener("touchend", function(e) {
-      if (isPanning) {
+      if (e.touches.length < 2) {
+        // إذا لم يعد هناك إصبعين، نوقف الزووم
+        lastTouchDistance = null;
+      }
+      if (e.touches.length === 0 && isPanning) {
+        // إذا لم يعد هناك لمسات، نوقف التحريك
         endPan(e);
       }
     }, { passive: false });
