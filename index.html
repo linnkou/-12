@@ -554,6 +554,9 @@
       renderOnAddRemove: true,
       selection: true,
     });
+    // تمكين تحجيم الكائنات بشكل موحد عند تغيير أبعادها
+    canvas.uniScaleTransform = true;
+
     let activeTool = null;
 
     /* --- دوال Undo/Redo --- */
@@ -1195,7 +1198,9 @@
       isPanning = false;
     }
 
-    /* --- معالجة أحداث اللمس --- */
+    /* --- معالجة أحداث اللمس ---
+         ننفذ Pan فقط إذا كان الوضع "تحريك الورقة" (move)
+         ومعالجة التكبير (Pinch Zoom) عند لمس إصبعين */
     let lastTouchDistance = null;
     function getTouchDistance(touches) {
       if(touches.length < 2) return 0;
@@ -1203,17 +1208,19 @@
       let dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx*dx+dy*dy);
     }
-    // عند اللمس: إذا كان إصبع واحد ابدأ في Pan، وإذا كان إصبعان قم بتسجيل المسافة للبداية من التكبير
     canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
+      // إذا كان لمس إصبع واحد وكون الأداة "move" فقط، نبدأ Pan
       if(e.touches.length === 1) {
-        e.preventDefault();
-        startPan({ e: e.touches[0] });
+        if(activeTool === "move"){
+          e.preventDefault();
+          startPan({ e: e.touches[0] });
+        }
       } else if(e.touches.length === 2) {
         lastTouchDistance = getTouchDistance(e.touches);
       }
     }, { passive: false });
     canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
-      if(e.touches.length === 1 && isPanning) {
+      if(e.touches.length === 1 && activeTool === "move" && isPanning) {
         e.preventDefault();
         panMove({ e: e.touches[0] });
       } else if(e.touches.length === 2) {
@@ -1240,8 +1247,12 @@
 
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
-      if (activeTool !== "move" && activeTool !== "select" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
-        openPropertyModal(e.target, e.pointer.x, e.pointer.y);
+      // إذا كانت الأداة ليست move أو point، نسمح بتحديد أو تعديل الكائنات
+      if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
+        // في وضع "select" لا نفتح نافذة الخصائص بحيث يتمكن المستخدم من تحديد وضبط الرسومات بواسطة تحكماتها (Scale / Rotate)
+        if(activeTool !== "select"){
+          openPropertyModal(e.target, e.pointer.x, e.pointer.y);
+        }
       }
       if(activeTool === "point" && pointSettings){
         const pointer = canvas.getPointer(e.e);
@@ -1472,6 +1483,7 @@
     /* --- تفعيل الأدوات --- */
     function activateTool(tool) {
       activeTool = tool;
+      // إزالة كافة مستمعي أحداث الفأرة مسبقًا
       canvas.off("mouse:down");
       canvas.off("mouse:move");
       canvas.off("mouse:up");
@@ -1482,14 +1494,17 @@
           : (tool === "select" ? "selectTool" : tool + "Tool")
       );
       if (toolElement) toolElement.classList.add("active");
+      // في وضع الرسم الحر (pen) يتم تفعيل نمط الرسم الخاص بالفابريك
       canvas.isDrawingMode = (tool === "pen");
       if (tool === "move") {
         canvas.selection = false;
         canvas.defaultCursor = "grab";
+        // في وضع التحريك، يتم تفعيل أحداث Pan للفأرة واللمس (كما تم تعديلها في أحداث اللمس)
         canvas.on("mouse:down", function (e) { startPan(e); });
         canvas.on("mouse:move", function (e) { if (isPanning) { panMove(e); } });
         canvas.on("mouse:up", function (e) { if (isPanning) { endPan(e); } });
       } else if (tool === "select") {
+        // في وضع التحديد، نريد السماح بتحديد كائن واحد أو أكثر مع ظهور أدوات (Scale/Rotate)
         canvas.selection = true;
         canvas.defaultCursor = "default";
       } else if (tool === "point") {
