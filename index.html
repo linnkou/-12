@@ -1222,8 +1222,20 @@
     }
 
     // دعم للأحداث اللمسية لتكبير/تصغير ولوحة الرسم
+    canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
+      e.preventDefault();
+      handleTouchStart(e);
+    }, { passive: false });
+    canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
+      e.preventDefault();
+      handleTouchMove(e);
+    }, { passive: false });
+    canvas.upperCanvasEl.addEventListener("touchend", function(e) {
+      handleTouchEnd(e);
+    }, { passive: false });
+
     function handleTouchStart(e) {
-      if (e.touches && e.touches.length === 1) {
+      if(e.touches && e.touches.length === 1) {
         startPan({ e: e.touches[0] });
       }
     }
@@ -1252,11 +1264,6 @@
     canvas.on("mouse:up", function(e) {
       if (isPanning) { endPan(e); }
     });
-
-    // إضافة دعم للأحداث اللمسية على الكانفاس
-    canvas.upperCanvasEl.addEventListener("touchstart", handleTouchStart, false);
-    canvas.upperCanvasEl.addEventListener("touchmove", handleTouchMove, false);
-    canvas.upperCanvasEl.addEventListener("touchend", handleTouchEnd, false);
 
     /* --- إعدادات قياس الزاوية --- */
     let anglePoints = [];
@@ -1535,7 +1542,7 @@
       } else if (tool === "polyRegular") {
         openPolyRegularModal();
       } else if (tool === "pen") {
-        // لا تغيير هنا
+        // لا تغيير هنا؛ سيتم استخدام نمط الرسم الحر الخاص بالفابريك.
       } else if (tool === "save") {
         saveCanvas();
       } else {
