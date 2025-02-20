@@ -2,14 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <!-- السماح بالتكبير باللمس باستخدام معالجنا الخاص -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>برنامج الهندسة - من إعداد الأستاذ العربي بودهير عبد اللطيف</title>
-  <!-- استخدام أيقونات FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <!-- الخطوط الاحترافية -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-  <!-- تحميل مكتبة Fabric.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
   <style>
     /* تصميم متجاوب مع جميع الشاشات */
@@ -24,7 +20,6 @@
       min-height: 100vh;
     }
     
-    /* تعديلات الهيدر */
     .header {
       background: linear-gradient(135deg, #1976d2, #1565c0);
       color: #fff;
@@ -40,7 +35,6 @@
       color: #e3f2fd;
     }
     
-    /* الشريط الجانبي */
     .sidebar {
       width: 100%;
       background: #f0f4f8;
@@ -101,7 +95,6 @@
       margin-bottom: 10px;
     }
     
-    /* المحتوى الرئيسي */
     .main-content {
       flex-grow: 1;
       display: flex;
@@ -109,7 +102,6 @@
       padding: 10px;
     }
     
-    /* لوحة الرسم */
     .canvas-container {
       border: 2px solid #1976d2;
       border-radius: 8px;
@@ -129,7 +121,6 @@
       height: auto;
     }
     
-    /* شريط الإختصارات */
     .tools {
       display: flex;
       flex-wrap: wrap;
@@ -168,7 +159,6 @@
       font-size: 16px;
     }
     
-    /* النوافذ المنبثقة */
     .modal {
       display: none;
       position: fixed;
@@ -229,7 +219,6 @@
     .modal-buttons button:hover {
       background: #0d47a1;
     }
-    /* نافذة تعديل خصائص الرسم */
     #propertyModal {
       width: 90%;
       max-width: 300px;
@@ -237,7 +226,6 @@
       z-index: 1200;
     }
     
-    /* تصميم متجاوب لأجهزة سطح المكتب */
     @media (min-width: 768px) {
       body {
         flex-direction: row;
@@ -554,6 +542,9 @@
       renderOnAddRemove: true,
       selection: true,
     });
+    // تمكين تحجيم الكائنات بشكل موحد عند تغيير أبعادها
+    canvas.uniScaleTransform = true;
+
     let activeTool = null;
 
     /* --- دوال Undo/Redo --- */
@@ -1177,80 +1168,71 @@
     let lastPosX, lastPosY;
     function startPan(e) {
       isPanning = true;
-      let evt = e.e;
-      lastPosX = evt.clientX;
-      lastPosY = evt.clientY;
+      let evt = e.e || e; // التعامل مع أحداث الفأرة واللمس
+      lastPosX = evt.clientX || evt.touches[0].clientX;
+      lastPosY = evt.clientY || evt.touches[0].clientY;
       canvas.discardActiveObject();
     }
     function panMove(e) {
       if (!isPanning) return;
-      let evt = e.e;
-      let deltaX = evt.clientX - lastPosX;
-      let deltaY = evt.clientY - lastPosY;
-      lastPosX = evt.clientX;
-      lastPosY = evt.clientY;
+      let evt = e.e || e; // التعامل مع أحداث الفأرة واللمس
+      let currentX = evt.clientX || evt.touches[0].clientX;
+      let currentY = evt.clientY || evt.touches[0].clientY;
+      let deltaX = currentX - lastPosX;
+      let deltaY = currentY - lastPosY;
+      lastPosX = currentX;
+      lastPosY = currentY;
       canvas.relativePan({ x: deltaX, y: deltaY });
     }
     function endPan(e) {
       isPanning = false;
     }
 
-    /* --- معالجة أحداث اللمس --- */
-    let lastTouchDistance = null;
-    function getTouchDistance(touches) {
-      if(touches.length < 2) return 0;
-      let dx = touches[0].clientX - touches[1].clientX;
-      let dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx*dx+dy*dy);
-    }
-    // عند اللمس: إذا كان إصبع واحد ابدأ في Pan، وإذا كان إصبعان قم بتسجيل المسافة للبداية من التكبير
+    // إضافة دعم لأحداث اللمس
     canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
-      if(e.touches.length === 1) {
+      if (activeTool === "move") {
         e.preventDefault();
-        startPan({ e: e.touches[0] });
-      } else if(e.touches.length === 2) {
-        lastTouchDistance = getTouchDistance(e.touches);
+        startPan(e);
       }
     }, { passive: false });
+
     canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
-      if(e.touches.length === 1 && isPanning) {
+      if (activeTool === "move" && isPanning) {
         e.preventDefault();
-        panMove({ e: e.touches[0] });
-      } else if(e.touches.length === 2) {
-        e.preventDefault();
-        let currentDistance = getTouchDistance(e.touches);
-        if(lastTouchDistance) {
-          let zoom = canvas.getZoom() * (currentDistance / lastTouchDistance);
-          if (zoom > 20) zoom = 20;
-          if (zoom < 0.01) zoom = 0.01;
-          canvas.setZoom(zoom);
-          canvas.requestRenderAll();
-        }
-        lastTouchDistance = currentDistance;
+        panMove(e);
       }
     }, { passive: false });
+
     canvas.upperCanvasEl.addEventListener("touchend", function(e) {
-      if(e.touches.length < 2) {
-        lastTouchDistance = null;
-      }
-      if(e.touches.length === 0 && isPanning) {
+      if (isPanning) {
         endPan(e);
       }
     }, { passive: false });
 
+    // تعديل حدث mouse:down بحيث إذا كانت الأداة "move" نتجاهل باقي الأكواد
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
-      if (activeTool !== "move" && activeTool !== "select" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
-        openPropertyModal(e.target, e.pointer.x, e.pointer.y);
+      if (activeTool === "move") {
+        startPan(e);
+        return;
+      }
+      
+      // إذا كانت الأداة ليست move أو point، نسمح بتحديد أو تعديل الكائنات
+      if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
+        if(activeTool !== "select"){
+          openPropertyModal(e.target, e.pointer.x, e.pointer.y);
+        }
       }
       if(activeTool === "point" && pointSettings){
         const pointer = canvas.getPointer(e.e);
         addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
       }
     });
+
     canvas.on("mouse:move", function(e) {
       if (isPanning) { panMove(e); }
     });
+
     canvas.on("mouse:up", function(e) {
       if (isPanning) { endPan(e); }
     });
@@ -1472,6 +1454,7 @@
     /* --- تفعيل الأدوات --- */
     function activateTool(tool) {
       activeTool = tool;
+      // إزالة كافة مستمعي أحداث الفأرة مسبقًا
       canvas.off("mouse:down");
       canvas.off("mouse:move");
       canvas.off("mouse:up");
@@ -1482,10 +1465,12 @@
           : (tool === "select" ? "selectTool" : tool + "Tool")
       );
       if (toolElement) toolElement.classList.add("active");
+      // في وضع الرسم الحر (pen) يتم تفعيل نمط الرسم الخاص بالفابريك
       canvas.isDrawingMode = (tool === "pen");
       if (tool === "move") {
         canvas.selection = false;
         canvas.defaultCursor = "grab";
+        // في وضع التحريك، يتم تفعيل أحداث Pan للفأرة واللمس (كما تم تعديلها في أحداث اللمس)
         canvas.on("mouse:down", function (e) { startPan(e); });
         canvas.on("mouse:move", function (e) { if (isPanning) { panMove(e); } });
         canvas.on("mouse:up", function (e) { if (isPanning) { endPan(e); } });
@@ -1532,7 +1517,6 @@
       } else if (tool === "polyRegular") {
         openPolyRegularModal();
       } else if (tool === "pen") {
-        // لا تغيير هنا؛ سيتم استخدام نمط الرسم الحر الخاص بالفابريك.
       } else if (tool === "save") {
         saveCanvas();
       } else {
@@ -1551,7 +1535,6 @@
     }
     window.onload = () => {
       activateTool("point");
-      // تحديث حجم الكانفاس لتناسب الأجهزة المحمولة
       resizeCanvas();
     };
 
@@ -1559,10 +1542,8 @@
     function resizeCanvas() {
       const container = document.querySelector(".canvas-container");
       if (container) {
-        // تحديد العرض بحيث لا يتجاوز 800px مع هوامش مناسبة
         const newWidth = Math.min(window.innerWidth - 20, 800);
         container.style.width = newWidth + "px";
-        // استخدام نسبة تقريبية 0.75 للارتفاع
         container.style.height = (newWidth * 0.75) + "px";
         canvas.setWidth(container.clientWidth);
         canvas.setHeight(container.clientHeight);
