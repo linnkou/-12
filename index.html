@@ -121,12 +121,14 @@
       margin: 10px auto;
       overflow: hidden;
     }
+    /* منع سلوك اللمس الافتراضي على الكانفاس */
     canvas {
       display: block;
       margin: auto;
       border-radius: 8px;
       width: 100%;
       height: auto;
+      touch-action: none;
     }
     
     /* شريط الإختصارات */
@@ -1190,6 +1192,10 @@
       let evt = e.e;
       let deltaX = evt.clientX - lastPosX;
       let deltaY = evt.clientY - lastPosY;
+      // معامل تخفيض الحركة لتقليل الحساسية
+      const damping = 0.6;
+      deltaX *= damping;
+      deltaY *= damping;
       lastPosX = evt.clientX;
       lastPosY = evt.clientY;
       canvas.relativePan({ x: deltaX, y: deltaY });
@@ -1550,6 +1556,7 @@
       } else if (tool === "polyRegular") {
         openPolyRegularModal();
       } else if (tool === "pen") {
+        // في وضع قلم الرسم الحر يقوم fabric.js بإعداد الوضع المناسب.
       } else if (tool === "save") {
         saveCanvas();
       } else {
