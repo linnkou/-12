@@ -121,14 +121,12 @@
       margin: 10px auto;
       overflow: hidden;
     }
-    /* منع سلوك اللمس الافتراضي على الكانفاس */
     canvas {
       display: block;
       margin: auto;
       border-radius: 8px;
       width: 100%;
       height: auto;
-      touch-action: none;
     }
     
     /* شريط الإختصارات */
@@ -556,9 +554,6 @@
       renderOnAddRemove: true,
       selection: true,
     });
-    // تمكين تحجيم الكائنات بشكل موحد عند تغيير أبعادها
-    canvas.uniScaleTransform = true;
-
     let activeTool = null;
 
     /* --- دوال Undo/Redo --- */
@@ -1192,10 +1187,6 @@
       let evt = e.e;
       let deltaX = evt.clientX - lastPosX;
       let deltaY = evt.clientY - lastPosY;
-      // معامل تخفيض الحركة لتقليل الحساسية
-      const damping = 0.6;
-      deltaX *= damping;
-      deltaY *= damping;
       lastPosX = evt.clientX;
       lastPosY = evt.clientY;
       canvas.relativePan({ x: deltaX, y: deltaY });
@@ -1204,9 +1195,7 @@
       isPanning = false;
     }
 
-    /* --- معالجة أحداث اللمس ---
-         ننفذ Pan فقط إذا كان الوضع "تحريك الورقة" (move)
-         ومعالجة التكبير (Pinch Zoom) عند لمس إصبعين */
+    /* --- معالجة أحداث اللمس --- */
     let lastTouchDistance = null;
     function getTouchDistance(touches) {
       if(touches.length < 2) return 0;
@@ -1214,19 +1203,17 @@
       let dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx*dx+dy*dy);
     }
+    // عند اللمس: إذا كان إصبع واحد ابدأ في Pan، وإذا كان إصبعان قم بتسجيل المسافة للبداية من التكبير
     canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
-      // إذا كان لمس إصبع واحد وكون الأداة "move" فقط، نبدأ Pan
       if(e.touches.length === 1) {
-        if(activeTool === "move"){
-          e.preventDefault();
-          startPan({ e: e.touches[0] });
-        }
+        e.preventDefault();
+        startPan({ e: e.touches[0] });
       } else if(e.touches.length === 2) {
         lastTouchDistance = getTouchDistance(e.touches);
       }
     }, { passive: false });
     canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
-      if(e.touches.length === 1 && activeTool === "move" && isPanning) {
+      if(e.touches.length === 1 && isPanning) {
         e.preventDefault();
         panMove({ e: e.touches[0] });
       } else if(e.touches.length === 2) {
@@ -1251,18 +1238,10 @@
       }
     }, { passive: false });
 
-    // تعديل حدث mouse:down بحيث إذا كانت الأداة "move" نتجاهل باقي الأكواد
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
-      if (activeTool === "move") {
-        return;
-      }
-      
-      // إذا كانت الأداة ليست move أو point، نسمح بتحديد أو تعديل الكائنات
-      if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
-        if(activeTool !== "select"){
-          openPropertyModal(e.target, e.pointer.x, e.pointer.y);
-        }
+      if (activeTool !== "move" && activeTool !== "select" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
+        openPropertyModal(e.target, e.pointer.x, e.pointer.y);
       }
       if(activeTool === "point" && pointSettings){
         const pointer = canvas.getPointer(e.e);
@@ -1493,7 +1472,6 @@
     /* --- تفعيل الأدوات --- */
     function activateTool(tool) {
       activeTool = tool;
-      // إزالة كافة مستمعي أحداث الفأرة مسبقًا
       canvas.off("mouse:down");
       canvas.off("mouse:move");
       canvas.off("mouse:up");
@@ -1504,12 +1482,10 @@
           : (tool === "select" ? "selectTool" : tool + "Tool")
       );
       if (toolElement) toolElement.classList.add("active");
-      // في وضع الرسم الحر (pen) يتم تفعيل نمط الرسم الخاص بالفابريك
       canvas.isDrawingMode = (tool === "pen");
       if (tool === "move") {
         canvas.selection = false;
         canvas.defaultCursor = "grab";
-        // في وضع التحريك، يتم تفعيل أحداث Pan للفأرة واللمس (كما تم تعديلها في أحداث اللمس)
         canvas.on("mouse:down", function (e) { startPan(e); });
         canvas.on("mouse:move", function (e) { if (isPanning) { panMove(e); } });
         canvas.on("mouse:up", function (e) { if (isPanning) { endPan(e); } });
@@ -1556,7 +1532,7 @@
       } else if (tool === "polyRegular") {
         openPolyRegularModal();
       } else if (tool === "pen") {
-        // في وضع قلم الرسم الحر يقوم fabric.js بإعداد الوضع المناسب.
+        // لا تغيير هنا؛ سيتم استخدام نمط الرسم الحر الخاص بالفابريك.
       } else if (tool === "save") {
         saveCanvas();
       } else {
@@ -1575,6 +1551,7 @@
     }
     window.onload = () => {
       activateTool("point");
+      // تحديث حجم الكانفاس لتناسب الأجهزة المحمولة
       resizeCanvas();
     };
 
@@ -1582,8 +1559,10 @@
     function resizeCanvas() {
       const container = document.querySelector(".canvas-container");
       if (container) {
+        // تحديد العرض بحيث لا يتجاوز 800px مع هوامش مناسبة
         const newWidth = Math.min(window.innerWidth - 20, 800);
         container.style.width = newWidth + "px";
+        // استخدام نسبة تقريبية 0.75 للارتفاع
         container.style.height = (newWidth * 0.75) + "px";
         canvas.setWidth(container.clientWidth);
         canvas.setHeight(container.clientHeight);
