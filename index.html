@@ -1,1339 +1,832 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>برنامج الهندسة - من إعداد الأستاذ العربي بودهير عبد اللطيف</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
-<style>
-/* الإعدادات العامة */
-body {
-    font-family: 'Roboto Slab', 'Tajawal', sans-serif;
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(135deg, #e1f5fe, #ffffff);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    color: #333;
-    overflow: hidden;
-}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>برنامج الهندسة - من إعداد الأستاذ العربي بودهير عبد اللطيف</title>
+    <!-- استخدام أيقونات FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- الخطوط الاحترافية -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Tajawal:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+    <style>
+        /* الإعدادات العامة */
+        body {
+            font-family: 'Roboto Slab', 'Tajawal', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e1f5fe, #ffffff);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            /* تغيير إلى flex column لتصميم متجاوب */
+            min-height: 100vh;
+        }
 
-/* الشريط الجانبي */
-.sidebar {
-    width: 260px;
-    background: #f0f4f8;
-    padding: 20px;
-    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    height: 100vh;
-    transition: transform 0.3s ease;
-    position: fixed;
-    top: 0;
-    right: -260px;
-    z-index: 1000;
-}
+        /* تعديلات الهيدر */
+        .header {
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            color: #fff;
+            text-align: center;
+            padding: 16px 10px;
+            font-size: 20px;
+            /* تقليل حجم الخط قليلاً */
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* تقليل الظل */
+        }
 
-.sidebar.active {
-    transform: translateX(-260px);
-}
+        .header p {
+            font-size: 12px;
+            /* تقليل حجم الخط */
+            margin-top: 4px;
+            color: #e3f2fd;
+        }
 
-.sidebar h3 {
-    font-size: 16px;
-    margin: 20px 0 10px;
-    color: #1565c0;
-    border-bottom: 1px solid #cfd8dc;
-    padding-bottom: 5px;
-}
+        /* تعديلات الشريط الجانبي */
+        .sidebar {
+            width: 100%;
+            /* اجعل الشريط الجانبي يشغل العرض الكامل */
+            background: #f0f4f8;
+            padding: 10px;
+            /* تقليل المساحة الداخلية */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* تقليل الظل */
+            overflow-x: auto;
+            /* إضافة تمرير أفقي إذا لزم الأمر */
+            height: auto;
+            /* ارتفاع تلقائي */
+            transition: all 0.3s ease;
+            display: flex;
+            flex-wrap: wrap;
+            /* السماح للعناصر بالالتفاف */
+            justify-content: center;
+            /* توسيط العناصر */
+        }
 
-.tool-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+        .sidebar h3 {
+            font-size: 14px;
+            /* تقليل حجم الخط */
+            margin: 10px 0 5px;
+            /* تقليل الهوامش */
+            color: #1565c0;
+            border-bottom: 1px solid #cfd8dc;
+            padding-bottom: 3px;
+            /* تقليل الحشو */
+            width: 100%;
+            /* عرض كامل */
+            text-align: center;
+            /* توسيط النص */
+        }
 
-.tool-list li {
-    padding: 12px 10px;
-    cursor: pointer;
-    transition: background .3s, transform .2s;
-    border-radius: 4px;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+        .tool-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            /* عرض العناصر بجانب بعضها البعض */
+            flex-wrap: wrap;
+            /* السماح للعناصر بالالتفاف */
+            justify-content: center;
+            /* توسيط العناصر */
+        }
 
-.tool-list li:hover {
-    background: #e3f2fd;
-    transform: translateX(5px);
-    color: #0d47a1;
-}
+        .tool-list li {
+            padding: 6px 8px;
+            /* تقليل الحشو */
+            cursor: pointer;
+            transition: background .3s, transform .2s;
+            border-radius: 4px;
+            font-size: 12px;
+            /* تقليل حجم الخط */
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            /* تقليل الفجوة */
+            margin: 2px;
+            /* إضافة هامش صغير */
+        }
 
-.tool-list li i {
-    width: 22px;
-    text-align: center;
-    animation: iconBounce 1.5s infinite;
-}
+        .tool-list li:hover {
+            background: #e3f2fd;
+            transform: scale(1.05);
+            /* تكبير طفيف عند التحويم */
+            color: #0d47a1;
+        }
 
-@keyframes iconBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-}
+        .tool-list li i {
+            width: 18px;
+            /* تقليل العرض */
+            text-align: center;
+            animation: iconBounce 1.5s infinite;
+            font-size: 14px;
+            /* تقليل حجم الأيقونة */
+        }
 
-/* المحتوى الرئيسي */
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    margin-right: 0;
-    transition: margin-right 0.3s ease;
-}
+        @keyframes iconBounce {
 
-.header {
-    background: linear-gradient(135deg, #1976d2, #1565c0);
-    color: #fff;
-    text-align: center;
-    padding: 18px 10px;
-    font-size: 24px;
-    font-weight: 700;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
+            0%,
+            100% {
+                transform: translateY(0);
+            }
 
-.header p {
-    font-size: 14px;
-    margin-top: 5px;
-    color: #e3f2fd;
-}
+            50% {
+                transform: translateY(-3px);
+            }
+        }
 
-/* لوحة الرسم */
-.canvas-container {
-    border: 2px solid #1976d2;
-    border-radius: 8px;
-    position: relative;
-    background: #fff;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    height: 60vh;
-    margin: 20px auto;
-    overflow: hidden;
-    touch-action: none; /* لمنع التمرير التلقائي على الهواتف */
-}
+        .tool-category {
+            width: 100%;
+            /* عرض كامل */
+            margin-bottom: 10px;
+            /* هامش سفلي */
+        }
 
-canvas {
-    display: block;
-    margin: auto;
-    border-radius: 8px;
-}
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            /* تقليل المساحة الداخلية */
+        }
 
-/* شريط الأدوات السفلي */
-.bottom-tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    width: 100%;
-    margin: 10px auto;
-    padding: 10px;
-    background: #fafafa;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    justify-content: center;
-}
+        /* لوحة الرسم */
+        .canvas-container {
+            border: 2px solid #1976d2;
+            border-radius: 8px;
+            position: relative;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            /* عرض كامل */
+            max-width: 800px;
+            /* الحد الأقصى للعرض */
+            height: auto;
+            /* ارتفاع تلقائي */
+            margin: 10px auto;
+            /* توسيط */
+            overflow: hidden;
+        }
 
-.tool-btn {
-    background: #e3f2fd;
-    border: none;
-    border-radius: 6px;
-    padding: 12px 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    color: #1565c0;
-    transition: background 0.3s, transform 0.2s;
-}
+        canvas {
+            display: block;
+            margin: auto;
+            border-radius: 8px;
+            width: 100%;
+            /* عرض كامل */
+            height: auto;
+            /* ارتفاع تلقائي */
+        }
 
-.tool-btn:hover {
-    background: #bbdefb;
-    transform: scale(1.05);
-}
+        /* شريط الإختصارات تحت لوحة الرسم */
+        .tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            /* تقليل الفجوة */
+            width: 100%;
+            /* عرض كامل */
+            max-width: 800px;
+            /* الحد الأقصى للعرض */
+            margin: 10px auto 0 auto;
+            padding: 10px;
+            /* تقليل المساحة الداخلية */
+            background: #fafafa;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            /* تقليل الظل */
+            justify-content: center;
+        }
 
-.tool-btn.active {
-    background: #1565c0;
-    color: #fff;
-}
+        .tool-btn {
+            background: #e3f2fd;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            /* تقليل الحشو */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            /* تقليل الفجوة */
+            font-size: 12px;
+            /* تقليل حجم الخط */
+            color: #1565c0;
+            transition: background 0.3s, transform 0.2s;
+        }
 
-.tool-btn i {
-    font-size: 20px;
-}
+        .tool-btn:hover {
+            background: #bbdefb;
+            transform: scale(1.05);
+            /* تكبير طفيف عند التحويم */
+        }
 
-/* زر القائمة */
-.menu-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #1565c0;
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1001;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+        .tool-btn.active {
+            background: #1565c0;
+            color: #fff;
+        }
 
-.menu-btn i {
-    font-size: 24px;
-}
+        .tool-btn i {
+            font-size: 16px;
+            /* تقليل حجم الأيقونة */
+        }
 
-/* التصميم المتجاوب */
-@media (max-width: 600px) {
-    .canvas-container {
-        height: 70vh;
-    }
-    .tool-btn {
-        padding: 10px 12px;
-        font-size: 14px;
-    }
-}
-</style>
+        /* النوافذ المنبثقة */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 15% auto;
+            /* تعديل الهامش العلوي */
+            padding: 15px;
+            /* تقليل المساحة الداخلية */
+            border: 1px solid #ddd;
+            width: 80%;
+            /* اجعل النافذة المنبثقة تشغل 80% من العرض */
+            max-width: 400px;
+            /* حد أقصى للعرض */
+            border-radius: 8px;
+        }
+
+        .modal-content h4 {
+            margin-top: 0;
+            text-align: center;
+            color: #1565c0;
+            font-size: 16px;
+            /* تقليل حجم الخط */
+        }
+
+        .modal-content label {
+            display: block;
+            margin-top: 8px;
+            /* تقليل الهامش العلوي */
+            font-size: 12px;
+            /* تقليل حجم الخط */
+        }
+
+        .modal-content input[type="color"],
+        .modal-content input[type="number"],
+        .modal-content input[type="text"],
+        .modal-content select {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            /* تقليل الهامش العلوي */
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            font-size: 12px;
+            /* تقليل حجم الخط */
+        }
+
+        .modal-buttons {
+            margin-top: 15px;
+            /* تقليل الهامش العلوي */
+            text-align: center;
+        }
+
+        .modal-buttons button {
+            padding: 6px 12px;
+            /* تقليل الحشو */
+            margin: 0 4px;
+            /* تقليل الهوامش */
+            border: none;
+            background: #1565c0;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 12px;
+            /* تقليل حجم الخط */
+        }
+
+        .modal-buttons button:hover {
+            background: #0d47a1;
+        }
+
+        /* نافذة تعديل خصائص الرسم */
+        #propertyModal {
+            width: 90%;
+            /* اجعلها متجاوبة */
+            max-width: 300px;
+            /* حد أقصى للعرض */
+            position: absolute;
+            z-index: 1200;
+        }
+
+        /* التصميم المتجاوب */
+        @media (min-width: 768px) {
+            body {
+                flex-direction: row;
+                /* العودة إلى تخطيط الصف */
+            }
+
+            .sidebar {
+                width: 200px;
+                /* عرض الشريط الجانبي */
+                height: 100vh;
+                /* ملء الارتفاع */
+                display: block;
+                /* عرضه ككتلة */
+                flex-wrap: nowrap;
+                /* منع الالتفاف */
+                justify-content: flex-start;
+                /* محاذاة إلى البداية */
+                overflow-x: hidden;
+                /* إخفاء التمرير الأفقي */
+            }
+
+            .tool-list {
+                flex-direction: column;
+                /* عرض العناصر عمودياً */
+                align-items: stretch;
+                /* تمديد العناصر */
+            }
+
+            .tool-list li {
+                margin: 0;
+                /* إزالة الهوامش */
+                text-align: center;
+                /* توسيط النص */
+            }
+
+            .tool-category h3 {
+                text-align: right;
+                /* محاذاة النص إلى اليمين */
+            }
+        }
+    </style>
 </head>
+
 <body>
-<!-- زر القائمة -->
-<div class="menu-btn" onclick="toggleSidebar()">
-    <i class="fas fa-bars"></i>
-</div>
-
-<!-- الشريط الجانبي -->
-<div class="sidebar" id="sidebar">
-    <div class="tool-category">
-        <h3>أدوات أساسية</h3>
-        <ul class="tool-list">
-            <li onclick="activateTool('move')"><i class="fas fa-hand-paper"></i>تحريك الورقة</li>
-            <li onclick="activateTool('select')"><i class="fas fa-mouse-pointer"></i>تحديد عنصر</li>
-            <li onclick="pointToolClicked()"><i class="fas fa-dot-circle"></i>نقطة</li>
-            <li onclick="activateTool('link')"><i class="fas fa-link"></i>ربط نقاط</li>
-            <li onclick="activateTool('phrases')"><i class="fas fa-pencil-alt"></i>كتابة جمل/حروف</li>
-            <li onclick="activateTool('angle')"><i class="fas fa-ruler-combined"></i>زاوية</li>
-            <li onclick="activateTool('delete')"><i class="fas fa-trash"></i>مسح</li>
-        </ul>
-    </div>
-    <!-- قسم المستقيمات -->
-    <div class="tool-category">
-        <h3>المستقيمات</h3>
-        <ul class="tool-list">
-            <li onclick="openLineModal('line')"><i class="fas fa-ruler"></i>مستقيم</li>
-            <li onclick="openLineModal('segment')"><i class="fas fa-ruler-horizontal"></i>قطعة مستقيمة</li>
-            <li onclick="activateTool('ray')"><i class="fas fa-long-arrow-alt-right"></i>شعاع</li>
-        </ul>
-    </div>
-    <div class="tool-category">
-        <h3>أشكال ومضلعات</h3>
-        <ul class="tool-list">
-            <li onclick="openShapeModal('rectangle')"><i class="fas fa-border-style"></i>مستطيل</li>
-            <li onclick="openShapeModal('square')"><i class="fas fa-th-large"></i>مربع</li>
-            <li onclick="openShapeModal('triangle')"><i class="fas fa-play"></i>مثلث</li>
-            <li onclick="openShapeModal('rhombus')"><i class="fas fa-diamond"></i>معين</li>
-            <li onclick="activateTool('polyFree')"><i class="fas fa-draw-polygon"></i>مضلع كيفي</li>
-            <li onclick="openPolyRegularModal()"><i class="fas fa-shapes"></i>مضلع منتظم</li>
-            <li onclick="openCircleModal()"><i class="fas fa-circle"></i>دائرة</li>
-        </ul>
-    </div>
-    <div class="tool-category">
-        <h3>أدوات إضافية</h3>
-        <ul class="tool-list">
-            <li onclick="toggleTeacher()"><i class="fas fa-chalkboard"></i>المعلم</li>
-            <li onclick="toggleGrid()"><i class="fas fa-th"></i>التقسيمات</li>
-            <li onclick="toggleTeacherNumbers()"><i class="fas fa-sort-numeric-up"></i>أرقام المعلم</li>
-            <li onclick="undoAction()"><i class="fas fa-undo"></i>تراجع</li>
-            <li onclick="redoAction()"><i class="fas fa-redo"></i>إعادة</li>
-            <li onclick="activateTool('save')"><i class="fas fa-save"></i>حفظ</li>
-        </ul>
-    </div>
-</div>
-
-<!-- المحتوى الرئيسي -->
-<div class="main-content" id="mainContent">
-    <div class="header">
-        برنامج الهندسة
-        <p>من إعداد الأستاذ العربي بودهير عبد اللطيف</p>
-    </div>
-    <!-- لوحة الرسم -->
-    <div class="canvas-container">
-        <canvas id="drawingCanvas" width="800" height="600"></canvas>
-    </div>
-    <!-- شريط الأدوات السفلي -->
-    <div class="bottom-tools">
-        <div class="tool-btn" id="pointTool" onclick="pointToolClicked()">
-            <i class="fas fa-dot-circle"></i>
-            <span>نقطة</span>
+    <!-- الشريط الجانبي -->
+    <div class="sidebar">
+        <div class="tool-category">
+            <h3>أدوات أساسية</h3>
+            <ul class="tool-list">
+                <li onclick="activateTool('move')"><i class="fas fa-hand-paper"></i>تحريك الورقة</li>
+                <li onclick="activateTool('select')"><i class="fas fa-mouse-pointer"></i>تحديد عنصر</li>
+                <li onclick="pointToolClicked()"><i class="fas fa-dot-circle"></i>نقطة</li>
+                <li onclick="activateTool('link')"><i class="fas fa-link"></i>ربط نقاط</li>
+                <li onclick="activateTool('phrases')"><i class="fas fa-pencil-alt"></i>كتابة جمل/حروف</li>
+                <li onclick="activateTool('angle')"><i class="fas fa-ruler-combined"></i>زاوية</li>
+                <li onclick="activateTool('delete')"><i class="fas fa-trash"></i>مسح</li>
+            </ul>
         </div>
-        <div class="tool-btn" id="lineTool" onclick="openLineModal('line')">
-            <i class="fas fa-ruler"></i>
-            <span>مستقيم</span>
+        <!-- قسم المستقيمات -->
+        <div class="tool-category">
+            <h3>المستقيمات</h3>
+            <ul class="tool-list">
+                <li onclick="openLineModal('line')"><i class="fas fa-ruler"></i>مستقيم</li>
+                <li onclick="openLineModal('segment')"><i class="fas fa-ruler-horizontal"></i>قطعة مستقيمة</li>
+                <li onclick="activateTool('ray')"><i class="fas fa-long-arrow-alt-right"></i>شعاع</li>
+            </ul>
         </div>
-        <div class="tool-btn" id="circleTool" onclick="activateTool('circle')">
-            <i class="far fa-circle"></i>
-            <span>دائرة</span>
+        <div class="tool-category">
+            <h3>أشكال ومضلعات</h3>
+            <ul class="tool-list">
+                <li onclick="openShapeModal('rectangle')"><i class="fas fa-border-style"></i>مستطيل</li>
+                <li onclick="openShapeModal('square')"><i class="fas fa-th-large"></i>مربع</li>
+                <li onclick="openShapeModal('triangle')"><i class="fas fa-play"></i>مثلث</li>
+                <li onclick="openShapeModal('rhombus')"><i class="fas fa-diamond"></i>معين</li>
+                <li onclick="activateTool('polyFree')"><i class="fas fa-draw-polygon"></i>مضلع كيفي</li>
+                <li onclick="openPolyRegularModal()"><i class="fas fa-shapes"></i>مضلع منتظم</li>
+                <li onclick="openCircleModal()"><i class="fas fa-circle"></i>دائرة</li>
+            </ul>
         </div>
-        <div class="tool-btn" id="penTool" onclick="activateTool('pen')">
-            <i class="fas fa-pen"></i>
-            <span>قلم حر</span>
-        </div>
-        <div class="tool-btn" id="moveTool" onclick="activateTool('move')">
-            <i class="fas fa-hand-paper"></i>
-            <span>تحريك</span>
+        <div class="tool-category">
+            <h3>أدوات إضافية</h3>
+            <ul class="tool-list">
+                <li onclick="toggleTeacher()"><i class="fas fa-chalkboard"></i>المعلم</li>
+                <li onclick="toggleGrid()"><i class="fas fa-th"></i>التقسيمات</li>
+                <li onclick="toggleTeacherNumbers()"><i class="fas fa-sort-numeric-up"></i>أرقام المعلم</li>
+                <li onclick="undoAction()"><i class="fas fa-undo"></i>تراجع</li>
+                <li onclick="redoAction()"><i class="fas fa-redo"></i>إعادة</li>
+                <li onclick="activateTool('save')"><i class="fas fa-save"></i>حفظ</li>
+            </ul>
         </div>
     </div>
-</div>
 
-<!-- عنصر رفع الصورة المخفي -->
-<input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
-
-<!-- النوافذ المنبثقة -->
-<div id="shapeModal" class="modal">
-    <div class="modal-content">
-        <h4 id="shapeModalTitle">إعدادات الشكل</h4>
-        <div id="dimensionFields"></div>
-        <label for="strokeColorShapeInput">لون الحدود:</label>
-        <input type="color" id="strokeColorShapeInput" value="#ff5722" />
-        <label for="fillColorShapeInput">لون التعبئة:</label>
-        <input type="color" id="fillColorShapeInput" value="#ffffff" />
-        <div class="modal-buttons">
-            <button onclick="confirmShapeModal()">تأكيد</button>
-            <button onclick="closeShapeModal()">إلغاء</button>
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        <div class="header">
+            برنامج الهندسة
+            <p>من إعداد الأستاذ العربي بودهير عبد اللطيف</p>
+        </div>
+        <!-- لوحة الرسم -->
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="800" height="600"></canvas>
+        </div>
+        <!-- شريط الإختصارات أسفل لوحة الرسم -->
+        <div class="tools">
+            <div class="tool-btn" id="pointTool" onclick="pointToolClicked()">
+                <i class="fas fa-dot-circle"></i>
+                <span>نقطة</span>
+            </div>
+            <div class="tool-btn" id="lineTool" onclick="openLineModal('line')">
+                <i class="fas fa-ruler"></i>
+                <span>مستقيم</span>
+            </div>
+            <div class="tool-btn" id="circleTool" onclick="activateTool('circle')">
+                <i class="far fa-circle"></i>
+                <span>دائرة</span>
+            </div>
+            <div class="tool-btn" id="penTool" onclick="activateTool('pen')">
+                <i class="fas fa-pen"></i>
+                <span>قلم حر</span>
+            </div>
+            <div class="tool-btn" id="moveTool" onclick="activateTool('move')">
+                <i class="fas fa-hand-paper"></i>
+                <span>تحريك الورقة</span>
+            </div>
+            <div class="tool-btn" id="selectTool" onclick="activateTool('select')">
+                <i class="fas fa-mouse-pointer"></i>
+                <span>تحديد عنصر</span>
+            </div>
+            <div class="tool-btn" id="uploadImageBtn"
+                onclick="document.getElementById('uploadInput').click()">
+                <i class="fas fa-upload"></i>
+                <span>رفع صورة</span>
+            </div>
+            <div class="tool-btn" id="copyDrawingBtn" onclick="copySelectedObjects()">
+                <i class="fas fa-clone"></i>
+                <span>نسخ الرسومات</span>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ... (بقية النوافذ المنبثقة) ... -->
+    <!-- عنصر رفع الصورة المخفي -->
+    <input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
 
-<script>
-/**************** إعدادات Undo/Redo ****************/
-let undoStack = [];
-let redoStack = [];
-let restoreInProgress = false;
-const CM_IN_PX = 37.8; // بكسل لكل سنتيمتر
+    <!-- النوافذ المنبثقة -->
+    <div id="shapeModal" class="modal">
+        <div class="modal-content">
+            <h4 id="shapeModalTitle">إعدادات الشكل</h4>
+            <div id="dimensionFields"></div>
+            <label for="strokeColorShapeInput">لون الحدود:</label>
+            <input type="color" id="strokeColorShapeInput" value="#ff5722" />
+            <label for="fillColorShapeInput">لون التعبئة:</label>
+            <input type="color" id="fillColorShapeInput" value="#ffffff" />
+            <div class="modal-buttons">
+                <button onclick="confirmShapeModal()">تأكيد</button>
+                <button onclick="closeShapeModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-let gridGroup = null;
-let polyFreePoints = [];
+    <div id="lineModal" class="modal">
+        <div class="modal-content">
+            <h4 id="lineModalTitle">إعدادات الخط</h4>
+            <label for="lineStyleSelect">نمط الخط:</label>
+            <select id="lineStyleSelect">
+                <option value="solid">غير متقطعة</option>
+                <option value="dashed">متقطعة</option>
+            </select>
+            <label for="lineLengthInput">الطول (للقطعة - بالسنتيمتر):</label>
+            <input type="number" id="lineLengthInput" value="10" min="1" />
+            <label for="lineColorInput">لون الخط:</label>
+            <input type="color" id="lineColorInput" value="#007bff" />
+            <label for="lineThicknessInput">سماكة الخط:</label>
+            <input type="number" id="lineThicknessInput" value="2" min="1" />
+            <div class="modal-buttons">
+                <button onclick="confirmLineModal()">تأكيد</button>
+                <button onclick="closeLineModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-// إعدادات النقطة بعد تأكيدها
-let pointSettings = null;
+    <div id="textEditModal" class="modal">
+        <div class="modal-content">
+            <h4>إعدادات النص</h4>
+            <label for="userTextInput">النص:</label>
+            <input type="text" id="userTextInput" placeholder="اكتب هنا" />
+            <label for="fontFamilySelect">نوع الخط:</label>
+            <select id="fontFamilySelect">
+                <option value="Tajawal">Tajawal</option>
+                <option value="Arial">Arial</option>
+                <option value="Tahoma">Tahoma</option>
+            </select>
+            <label for="fontSizeInput">حجم الخط:</label>
+            <input type="number" id="fontSizeInput" value="20" min="10" />
+            <label for="textColorInput">لون النص:</label>
+            <input type="color" id="textColorInput" value="#333333" />
+            <div class="modal-buttons">
+                <button onclick="confirmTextEditModal()">تأكيد</button>
+                <button onclick="closeTextEditModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-// إنشاء الكانفاس
-const canvas = new fabric.Canvas("drawingCanvas", {
-    renderOnAddRemove: true,
-    selection: true,
-    isDrawingMode: false,
-});
-let activeTool = null;
+    <div id="angleModal" class="modal">
+        <div class="modal-content">
+            <h4>إعدادات قياس الزاوية</h4>
+            <label for="showAngleCheckbox">
+                <input type="checkbox" id="showAngleCheckbox" checked /> إظهار القياس
+            </label>
+            <label for="angleDirectionSelect">اتجاه التشفير:</label>
+            <select id="angleDirectionSelect">
+                <option value="normal">طبيعي</option>
+                <option value="reversed">مقلوب</option>
+            </select>
+            <label for="desiredAngleInput">قيمة الزاوية (بالدرجات):</label>
+            <input type="number" id="desiredAngleInput" value="45" min="1" max="179" />
+            <div class="modal-buttons">
+                <button onclick="confirmAngleModal()">تأكيد</button>
+                <button onclick="closeAngleModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-/* --- دوال Undo/Redo --- */
-function saveState() {
-    if (!restoreInProgress) {
-        undoStack.push(JSON.stringify(canvas));
-        redoStack = [];
-    }
-}
-function undoAction() {
-    if (undoStack.length > 1) {
-        restoreInProgress = true;
-        redoStack.push(undoStack.pop());
-        let state = undoStack[undoStack.length - 1];
-        canvas.loadFromJSON(state, () => {
-            canvas.renderAll();
-            restoreInProgress = false;
+    <div id="polyModal" class="modal">
+        <div class="modal-content">
+            <h4>إعدادات المضلع المنتظم</h4>
+            <label for="sidesInput">عدد الأضلاع:</label>
+            <input type="number" id="sidesInput" value="5" min="3" />
+            <label for="radiusInput">القطر المطلوب (بـ cm):</label>
+            <input type="number" id="radiusInput" value="50" min="10" />
+            <label for="strokeColorPolyInput">لون الحدود:</label>
+            <input type="color" id="strokeColorPolyInput" value="#ff00ff" />
+            <div class="modal-buttons">
+                <button onclick="confirmPolyModal()">تأكيد</button>
+                <button onclick="closePolyModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pointModal" class="modal">
+        <div class="modal-content">
+            <h4>إعدادات النقطة</h4>
+            <label for="pointTypeSelect">نوع النقطة:</label>
+            <select id="pointTypeSelect">
+                <option value="circle">دائري</option>
+                <option value="x">X</option>
+            </select>
+            <label for="pointSizeInput">الحجم (بـ cm):</label>
+            <input type="number" id="pointSizeInput" value="0.3" min="0.1" step="0.1" />
+            <label for="pointColorInput">لون النقطة:</label>
+            <input type="color" id="pointColorInput" value="#007bff" />
+            <div class="modal-buttons">
+                <button onclick="confirmPointModal()">تأكيد</button>
+                <button onclick="closePointModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <h4>إعدادات الحفظ</h4>
+            <label for="saveWidthInput">عرض الورقة (بـ cm):</label>
+            <input type="number" id="saveWidthInput" value="21" min="5" />
+            <label for="saveHeightInput">ارتفاع الورقة (بـ cm):</label>
+            <input type="number" id="saveHeightInput" value="29.7" min="5" />
+            <div class="modal-buttons">
+                <button onclick="confirmSaveModal()">حفظ</button>
+                <button onclick="closeSaveModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="circleShapeModal" class="modal">
+        <div class="modal-content">
+            <h4>إعدادات الدائرة</h4>
+            <label for="circleRadiusInput">نصف القطر (بـ cm):</label>
+            <input type="number" id="circleRadiusInput" value="5" min="1" />
+            <label for="strokeColorCircleInput">لون الحدود:</label>
+            <input type="color" id="strokeColorCircleInput" value="#007bff" />
+            <label for="fillColorCircleInput">لون التعبئة:</label>
+            <input type="color" id="fillColorCircleInput" value="#ffffff" />
+            <label for="circleFillTypeSelect">نوع التعبئة:</label>
+            <select id="circleFillTypeSelect">
+                <option value="filled">ممتلئة</option>
+                <option value="empty">فارغة</option>
+            </select>
+            <label for="circleShapeSelect">شكل الدائرة:</label>
+            <select id="circleShapeSelect">
+                <option value="normal">عادية</option>
+                <option value="half">نصف دائرة</option>
+                <option value="quarter">ربع دائرة</option>
+            </select>
+            <div class="modal-buttons">
+                <button onclick="confirmCircleModal()">تأكيد</button>
+                <button onclick="closeCircleModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="propertyModal" class="modal">
+        <div class="modal-content">
+            <h4>تعديل الخصائص</h4>
+            <label for="propStrokeColorInput">لون الحدود:</label>
+            <input type="color" id="propStrokeColorInput" value="#000000" />
+            <label for="propStrokeWidthInput">سماكة الحدود:</label>
+            <input type="number" id="propStrokeWidthInput" value="2" min="1" />
+            <div id="fillColorContainer" style="display: none;">
+                <label for="propFillColorInput">لون التعبئة:</label>
+                <input type="color" id="propFillColorInput" value="#ffffff" />
+            </div>
+            <div class="modal-buttons">
+                <button onclick="updateObjectProperties()">تحديث</button>
+                <button onclick="closePropertyModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**************** إعدادات Undo/Redo ****************/
+        let undoStack = [];
+        let redoStack = [];
+        let restoreInProgress = false;
+        const CM_IN_PX = 37.8; // بكسل لكل سنتيمتر
+
+        let gridGroup = null;
+        let polyFreePoints = [];
+
+        // إعدادات النقطة بعد تأكيدها
+        let pointSettings = null;
+
+        // إنشاء الكانفاس
+        const canvas = new fabric.Canvas("drawingCanvas", {
+            renderOnAddRemove: true,
+            selection: true,
         });
-    }
-}
-function redoAction() {
-    if (redoStack.length) {
-        restoreInProgress = true;
-        let state = redoStack.pop();
-        undoStack.push(state);
-        canvas.loadFromJSON(state, () => {
-            canvas.renderAll();
-            restoreInProgress = false;
-        });
-    }
-}
-canvas.on("object:added", saveState);
-canvas.on("object:modified", saveState);
-canvas.on("object:removed", saveState);
+        let activeTool = null;
 
-/* --- إنشاء النقاط --- */
-function createCirclePoint(left, top, size, color) {
-    const point = new fabric.Circle({
-        radius: size,
-        fill: color,
-        left: left,
-        top: top,
-        selectable: true,
-        originX: "center",
-        originY: "center",
-    });
-    point.isPoint = true;
-    return point;
-}
-function createXPoint(left, top, size, color) {
-    const offset = size;
-    const line1 = new fabric.Line([left - offset, top - offset, left + offset, top + offset], {
-        stroke: color,
-        strokeWidth: 2,
-        selectable: false,
-    });
-    const line2 = new fabric.Line([left - offset, top + offset, left + offset, top - offset], {
-        stroke: color,
-        strokeWidth: 2,
-        selectable: false,
-    });
-    const group = new fabric.Group([line1, line2], {
-        left: left,
-        top: top,
-        originX: "center",
-        originY: "center",
-        selectable: true
-    });
-    group.isPoint = true;
-    return group;
-}
-function addNewPointWithSettings(left, top, type, size, color) {
-    let point = type === "circle" ? createCirclePoint(left, top, size, color) : createXPoint(left, top, size, color);
-    canvas.add(point);
-    canvas.requestRenderAll();
-    return point;
-}
-
-/* --- الربط بين النقاط --- */
-let linkPoints = [];
-function onCanvasLinkMouseDown(e) {
-    if (e.target && e.target.isPoint) {
-        if (!linkPoints.includes(e.target)) {
-            linkPoints.push(e.target);
-            e.target.set({ stroke: "red", strokeWidth: 2 });
-            canvas.requestRenderAll();
+        /* --- دوال Undo/Redo --- */
+        function saveState() {
+            if (!restoreInProgress) {
+                undoStack.push(JSON.stringify(canvas));
+                redoStack = [];
+            }
         }
-        if (linkPoints.length === 2) {
-            const pt1 = linkPoints[0];
-            const pt2 = linkPoints[1];
-            const line = new fabric.Line([pt1.left, pt1.top, pt2.left, pt2.top], {
-                stroke: "#007bff",
-                strokeWidth: 2,
-                selectable: true,
-            });
-            line.dynamicLink = true;
-            line.linkFrom = pt1;
-            line.linkTo = pt2;
-            canvas.add(line);
-            pt1.set({ stroke: null, strokeWidth: 0 });
-            pt2.set({ stroke: null, strokeWidth: 0 });
-            linkPoints = [];
-            canvas.requestRenderAll();
-        }
-    }
-}
-canvas.on("object:moving", function(e) {
-    if (e.target && e.target.isPoint) {
-        updateDynamicLinks(e.target);
-    }
-});
-function updateDynamicLinks(movedPoint) {
-    canvas.getObjects().forEach((obj) => {
-        if (obj.dynamicLink && (obj.linkFrom === movedPoint || obj.linkTo === movedPoint)) {
-            obj.set({
-                x1: obj.linkFrom.left,
-                y1: obj.linkFrom.top,
-                x2: obj.linkTo.left,
-                y2: obj.linkTo.top,
-            });
-            obj.setCoords();
-            canvas.requestRenderAll();
-        }
-    });
-}
-
-/* --- نافذة تحرير النصوص --- */
-function openTextEditModal() {
-    document.getElementById("textEditModal").style.display = "block";
-}
-function closeTextEditModal() {
-    document.getElementById("textEditModal").style.display = "none";
-}
-function confirmTextEditModal() {
-    const userText = document.getElementById("userTextInput").value;
-    const fontFamily = document.getElementById("fontFamilySelect").value;
-    const fontSize = parseFloat(document.getElementById("fontSizeInput").value) || 20;
-    const textColor = document.getElementById("textColorInput").value;
-    if (userText) {
-        const textObj = new fabric.IText(userText, {
-            left: canvas.getWidth() / 2,
-            top: canvas.getHeight() / 2,
-            fontFamily: fontFamily,
-            fontSize: fontSize,
-            fill: textColor,
-            selectable: true,
-        });
-        canvas.add(textObj);
-        canvas.requestRenderAll();
-    }
-    document.getElementById("userTextInput").value = "";
-    closeTextEditModal();
-    activeTool = null;
-}
-
-/* --- إعدادات النقطة --- */
-function openPointModal() {
-    document.getElementById("pointModal").style.display = "block";
-}
-function closePointModal() {
-    document.getElementById("pointModal").style.display = "none";
-}
-function pointToolClicked() {
-    activeTool = "point";
-    openPointModal();
-}
-function confirmPointModal() {
-    const type = document.getElementById("pointTypeSelect").value;
-    const cmSize = parseFloat(document.getElementById("pointSizeInput").value) || 0.3;
-    const sizePx = cmSize * CM_IN_PX;
-    const color = document.getElementById("pointColorInput").value;
-    pointSettings = { type: type, size: sizePx, color: color };
-    closePointModal();
-}
-
-/* --- إعدادات الأشكال --- */
-let currentShape = null;
-function openShapeModal(shape) {
-    currentShape = shape;
-    document.getElementById("shapeModalTitle").innerText = "إعدادات " + shape;
-    let fieldsHTML = "";
-    if (shape === "rectangle") {
-        fieldsHTML += `<label for="rectWidthInput">عرض المستطيل (بـ cm):</label>
-        <input type="number" id="rectWidthInput" value="10" min="1" />
-        <label for="rectHeightInput">ارتفاع المستطيل (بـ cm):</label>
-        <input type="number" id="rectHeightInput" value="8" min="1" />`;
-    } else if (shape === "square") {
-        fieldsHTML += `<label for="squareSizeInput">طول ضلع المربع (بـ cm):</label>
-        <input type="number" id="squareSizeInput" value="10" min="1" />`;
-    } else if (shape === "triangle") {
-        fieldsHTML += `<label for="triBaseInput">طول القاعدة (بـ cm):</label>
-        <input type="number" id="triBaseInput" value="10" min="1" />
-        <label for="triSide2Input">الضلع الثاني (بـ cm):</label>
-        <input type="number" id="triSide2Input" value="8" min="1" />
-        <label for="triSide3Input">الضلع الثالث (بـ cm):</label>
-        <input type="number" id="triSide3Input" value="8" min="1" />`;
-    } else if (shape === "rhombus") {
-        fieldsHTML += `<label for="rhombusOffsetInput">المسافة من المركز (بـ cm):</label>
-        <input type="number" id="rhombusOffsetInput" value="5" min="1" />`;
-    }
-    document.getElementById("dimensionFields").innerHTML = fieldsHTML;
-    document.getElementById("shapeModal").style.display = "block";
-}
-function closeShapeModal() {
-    document.getElementById("shapeModal").style.display = "none";
-}
-function confirmShapeModal() {
-    const stroke = document.getElementById("strokeColorShapeInput").value;
-    const fill = document.getElementById("fillColorShapeInput").value;
-    if (currentShape === "rectangle") {
-        const widthCm = parseFloat(document.getElementById("rectWidthInput").value) || 10;
-        const heightCm = parseFloat(document.getElementById("rectHeightInput").value) || 8;
-        drawRectangle(widthCm * CM_IN_PX, heightCm * CM_IN_PX, stroke, fill);
-    } else if (currentShape === "square") {
-        const sizeCm = parseFloat(document.getElementById("squareSizeInput").value) || 10;
-        drawSquare(sizeCm * CM_IN_PX, stroke, fill);
-    } else if (currentShape === "triangle") {
-        const baseCm = parseFloat(document.getElementById("triBaseInput").value);
-        const side2Cm = parseFloat(document.getElementById("triSide2Input").value);
-        const side3Cm = parseFloat(document.getElementById("triSide3Input").value);
-        drawTriangle(baseCm * CM_IN_PX, side2Cm * CM_IN_PX, side3Cm * CM_IN_PX, stroke);
-    } else if (currentShape === "rhombus") {
-        const offsetCm = parseFloat(document.getElementById("rhombusOffsetInput").value) || 5;
-        drawRhombus(offsetCm * CM_IN_PX, stroke, fill);
-    }
-    closeShapeModal();
-}
-
-/* --- دوال رسم الأشكال --- */
-function drawRectangle(width, height, stroke, fill) {
-    const rect = new fabric.Rect({
-        left: canvas.getWidth() / 2 - width / 2,
-        top: canvas.getHeight() / 2 - height / 2,
-        fill: fill,
-        stroke: stroke,
-        strokeWidth: 2,
-        width: width,
-        height: height,
-        selectable: true,
-    });
-    canvas.add(rect);
-}
-function drawSquare(size, stroke, fill) {
-    const square = new fabric.Rect({
-        left: canvas.getWidth() / 2 - size / 2,
-        top: canvas.getHeight() / 2 - size / 2,
-        fill: fill,
-        stroke: stroke,
-        strokeWidth: 2,
-        width: size,
-        height: size,
-        selectable: true,
-    });
-    canvas.add(square);
-}
-function drawTriangle(a, b, c, stroke) {
-    if (a + b <= c || a + c <= b || b + c <= a) {
-        alert("الأطوال المدخلة لا تُشكل مثلثاً صحيحاً.");
-        return;
-    }
-    const centerX = canvas.getWidth() / 2;
-    const centerY = canvas.getHeight() / 2;
-    const pt1 = { x: centerX - a / 2, y: centerY + 50 };
-    const pt2 = { x: centerX + a / 2, y: centerY + 50 };
-    const D = (a * a + c * c - b * b) / (2 * a);
-    const h = Math.sqrt(c * c - D * D);
-    const pt3 = { x: pt1.x + D, y: pt1.y - h };
-    const triangle = new fabric.Polygon([pt1, pt2, pt3], {
-        fill: "transparent",
-        stroke: stroke,
-        strokeWidth: 2,
-        selectable: true,
-    });
-    canvas.add(triangle);
-}
-function drawRhombus(offset, stroke, fill) {
-    const centerX = canvas.getWidth() / 2;
-    const centerY = canvas.getHeight() / 2;
-    const points = [
-        { x: centerX, y: centerY - offset },
-        { x: centerX + offset, y: centerY },
-        { x: centerX, y: centerY + offset },
-        { x: centerX - offset, y: centerY }
-    ];
-    const rhombus = new fabric.Polygon(points, {
-        fill: fill,
-        stroke: stroke,
-        strokeWidth: 2,
-        selectable: true,
-        originX: "center",
-        originY: "center",
-    });
-    canvas.add(rhombus);
-}
-
-/* --- دوال إعدادات الخط --- */
-let currentLineTool = null;
-function openLineModal(tool) {
-    currentLineTool = tool;
-    document.getElementById("lineModalTitle").innerText = "إعدادات " + (tool === "line" ? "المستقيم" : "القطعة");
-    document.getElementById("lineModal").style.display = "block";
-}
-function closeLineModal() {
-    document.getElementById("lineModal").style.display = "none";
-}
-function confirmLineModal() {
-    const style = document.getElementById("lineStyleSelect").value;
-    const lineColor = document.getElementById("lineColorInput").value;
-    const lineThickness = parseInt(document.getElementById("lineThicknessInput").value) || 2;
-    if (currentLineTool === "line") {
-        drawLine(style, lineColor, lineThickness);
-    } else if (currentLineTool === "segment") {
-        const lengthCm = parseFloat(document.getElementById("lineLengthInput").value) || 10;
-        drawSegment(style, lengthCm, lineColor, lineThickness);
-    }
-    closeLineModal();
-}
-function drawLine(style, color, thickness) {
-    let dash = style === "dashed" ? [10, 5] : null;
-    const line = new fabric.Line(
-        [canvas.getWidth() * 0.1, canvas.getHeight() / 2, canvas.getWidth() * 0.9, canvas.getHeight() / 2],
-        {
-            stroke: color,
-            strokeWidth: thickness,
-            selectable: true,
-            strokeDashArray: dash
-        }
-    );
-    canvas.add(line);
-}
-function drawSegment(style, lengthCm, color, thickness) {
-    let dash = style === "dashed" ? [10, 5] : null;
-    const lengthPx = lengthCm * CM_IN_PX;
-    const centerX = canvas.getWidth() / 2;
-    const centerY = canvas.getHeight() / 2;
-    const half = lengthPx / 2;
-    const seg = new fabric.Line([centerX - half, centerY, centerX + half, centerY], {
-        stroke: color,
-        strokeWidth: thickness,
-        selectable: true,
-        strokeDashArray: dash
-    });
-    const pt1 = createCirclePoint(centerX - half, centerY, 5, color);
-    const pt2 = createCirclePoint(centerX + half, centerY, 5, color);
-    const segmentGroup = new fabric.Group([seg, pt1, pt2], { selectable: true });
-    canvas.add(segmentGroup);
-}
-
-/* --- باقي الدوال --- */
-function drawCircle() {
-    // يتم استدعاء نافذة إعدادات الدائرة عند الاستخدام.
-}
-function drawRay() {
-    const startX = canvas.getWidth() / 2;
-    const startY = canvas.getHeight() / 2;
-    const endX = startX + 100;
-    const endY = startY - 50;
-    const ray = new fabric.Line([startX, startY, endX, endY], {
-        stroke: "#6f42c1",
-        strokeWidth: 2,
-        selectable: true,
-    });
-    const angle = Math.atan2(endY - startY, endX - startX);
-    const arrow = new fabric.Triangle({
-        left: endX,
-        top: endY,
-        originX: "center",
-        originY: "center",
-        width: 12,
-        height: 18,
-        angle: angle * (180 / Math.PI) + 90,
-        fill: "#6f42c1",
-        selectable: true,
-    });
-    const rayGroup = new fabric.Group([ray, arrow], { selectable: true });
-    canvas.add(rayGroup);
-}
-
-/* --- دوال إعداد المضلع الحر --- */
-function onCanvasPolyFreeMouseDown(e) {
-    const pointer = canvas.getPointer(e.e);
-    if (polyFreePoints.length > 0) {
-        const firstPoint = polyFreePoints[0];
-        const dx = pointer.x - firstPoint.x,
-            dy = pointer.y - firstPoint.y;
-        if (Math.sqrt(dx * dx + dy * dy) < 10 && polyFreePoints.length >= 3) {
-            const poly = new fabric.Polygon(polyFreePoints, {
-                fill: "transparent",
-                stroke: "#ff00ff",
-                strokeWidth: 2,
-                selectable: true,
-            });
-            canvas.add(poly);
-            polyFreePoints = [];
-            canvas.off("mouse:down", onCanvasPolyFreeMouseDown);
-            canvas.off("mouse:dblclick", onCanvasPolyFreeDblClick);
-            activeTool = null;
-            return;
-        }
-    }
-    polyFreePoints.push({ x: pointer.x, y: pointer.y });
-    addNewPointWithSettings(pointer.x, pointer.y, "circle", 5, "#007bff");
-}
-function onCanvasPolyFreeDblClick(e) {
-    if (polyFreePoints.length >= 3) {
-        const poly = new fabric.Polygon(polyFreePoints, {
-            fill: "transparent",
-            stroke: "#ff00ff",
-            strokeWidth: 2,
-            selectable: true,
-        });
-        canvas.add(poly);
-    }
-    polyFreePoints = [];
-    canvas.off("mouse:down", onCanvasPolyFreeMouseDown);
-    canvas.off("mouse:dblclick", onCanvasPolyFreeDblClick);
-    activeTool = null;
-}
-
-/* --- إعداد المضلع المنتظم --- */
-function openPolyRegularModal() {
-    document.getElementById("polyModal").style.display = "block";
-}
-function closePolyModal() {
-    document.getElementById("polyModal").style.display = "none";
-}
-function confirmPolyModal() {
-    const sides = parseInt(document.getElementById("sidesInput").value) || 5;
-    const radiusCm = parseFloat(document.getElementById("radiusInput").value) || 50;
-    const radiusPx = radiusCm * CM_IN_PX;
-    const stroke = document.getElementById("strokeColorPolyInput").value;
-    drawPolyRegular(sides, radiusPx, stroke);
-    closePolyModal();
-}
-function drawPolyRegular(sides, radius, stroke) {
-    const center = { x: canvas.getWidth()/2, y: canvas.getHeight()/2 };
-    let points = [];
-    for (let i = 0; i < sides; i++) {
-        let angle = (2 * Math.PI * i) / sides;
-        points.push({
-            x: center.x + radius * Math.cos(angle),
-            y: center.y + radius * Math.sin(angle)
-        });
-    }
-    const poly = new fabric.Polygon(points, {
-        fill: "transparent",
-        stroke: stroke,
-        strokeWidth: 2,
-        selectable: true,
-    });
-    canvas.add(poly);
-    canvas.off("mouse:down", onCanvasPolyRegularMouseDown);
-    activeTool = null;
-}
-function onCanvasPolyRegularMouseDown(e) {
-    // يتم استخدام النافذة المنبثقة لهذا المثال.
-}
-
-/* --- عرض المحاور "المعلم" --- */
-let teacherGroup = null;
-function addTeacher() {
-    if (teacherGroup) return;
-    const w = canvas.getWidth();
-    const h = canvas.getHeight();
-    const centerX = w / 2;
-    const centerY = h / 2;
-    const horizontal = new fabric.Line([0, centerY, w, centerY], {
-        stroke: "#000",
-        strokeWidth: 1,
-        selectable: false
-    });
-    const vertical = new fabric.Line([centerX, 0, centerX, h], {
-        stroke: "#000",
-        strokeWidth: 1,
-        selectable: false
-    });
-    teacherGroup = new fabric.Group([horizontal, vertical], { selectable: false });
-    teacherGroup.nonEditable = true;
-    canvas.add(teacherGroup);
-    canvas.requestRenderAll();
-}
-function removeTeacher() {
-    if (teacherGroup) {
-        canvas.remove(teacherGroup);
-        teacherGroup = null;
-    }
-}
-function toggleTeacher() {
-    if (teacherGroup) removeTeacher();
-    else addTeacher();
-}
-
-/* --- أرقام المعلم --- */
-let teacherNumbersGroup = null;
-function addTeacherNumbers() {
-    if (teacherNumbersGroup) return;
-    let texts = [];
-    const spacing = CM_IN_PX;
-    const centerX = canvas.getWidth() / 2;
-    const centerY = canvas.getHeight() / 2;
-    const maxX = canvas.getWidth();
-    const maxY = canvas.getHeight();
-    for (let x = 0; x <= maxX; x += spacing) {
-        const num = Math.round((x - centerX) / CM_IN_PX);
-        let text = new fabric.Text(num.toString(), {
-            left: x,
-            top: centerY + 5,
-            fontSize: 10,
-            fill: "#999",
-            selectable: false,
-        });
-        texts.push(text);
-    }
-    for (let y = 0; y <= maxY; y += spacing) {
-        const num = Math.round((centerY - y) / CM_IN_PX);
-        let text = new fabric.Text(num.toString(), {
-            left: centerX + 5,
-            top: y,
-            fontSize: 10,
-            fill: "#999",
-            selectable: false,
-        });
-        texts.push(text);
-    }
-    teacherNumbersGroup = new fabric.Group(texts, { selectable: false });
-    teacherNumbersGroup.nonEditable = true;
-    canvas.add(teacherNumbersGroup);
-    canvas.requestRenderAll();
-}
-function removeTeacherNumbers() {
-    if (teacherNumbersGroup) {
-        canvas.remove(teacherNumbersGroup);
-        teacherNumbersGroup = null;
-    }
-}
-function toggleTeacherNumbers() {
-    if (!teacherNumbersGroup) addTeacherNumbers();
-    else removeTeacherNumbers();
-}
-
-/* --- التقسيمات (الشبكة) --- */
-let gridVisible = false;
-function toggleGrid() {
-    if (!gridVisible) {
-        const spacing = CM_IN_PX;
-        const w = canvas.getWidth();
-        const h = canvas.getHeight();
-        let lines = [];
-        for (let i = 0; i <= w / spacing; i++) {
-            let x = i * spacing;
-            let vertical = new fabric.Line([x, 0, x, h], {
-                stroke: "#eee",
-                selectable: false,
-            });
-            lines.push(vertical);
-        }
-        for (let i = 0; i <= h / spacing; i++) {
-            let y = i * spacing;
-            let horizontal = new fabric.Line([0, y, w, y], {
-                stroke: "#eee",
-                selectable: false,
-            });
-            lines.push(horizontal);
-        }
-        gridGroup = new fabric.Group(lines, { selectable: false });
-        canvas.add(gridGroup);
-        gridVisible = true;
-    } else {
-        canvas.remove(gridGroup);
-        gridGroup = null;
-        gridVisible = false;
-    }
-}
-
-/* --- حفظ العمل --- */
-function openSaveModal() {
-    document.getElementById("saveModal").style.display = "block";
-}
-function closeSaveModal() {
-    document.getElementById("saveModal").style.display = "none";
-}
-function confirmSaveModal() {
-    let widthCm = parseInt(document.getElementById("saveWidthInput").value) || (canvas.getWidth()/CM_IN_PX);
-    let heightCm = parseInt(document.getElementById("saveHeightInput").value) || (canvas.getHeight()/CM_IN_PX);
-    let widthPx = widthCm * CM_IN_PX;
-    let heightPx = heightCm * CM_IN_PX;
-    let multiplier = Math.min(widthPx / canvas.getWidth(), heightPx / canvas.getHeight());
-    const dataURL = canvas.toDataURL({ multiplier: multiplier, backgroundColor: "#ffffff" });
-    const link = document.createElement("a");
-    link.download = "work.png";
-    link.href = dataURL;
-    link.click();
-    closeSaveModal();
-}
-function saveCanvas() {
-    openSaveModal();
-}
-function zoomIn() {
-    let zoom = canvas.getZoom();
-    canvas.setZoom(zoom * 1.1);
-    canvas.requestRenderAll();
-}
-function zoomOut() {
-    let zoom = canvas.getZoom();
-    canvas.setZoom(zoom / 1.1);
-    canvas.requestRenderAll();
-}
-canvas.on("mouse:wheel", function(opt) {
-    let delta = opt.e.deltaY;
-    let zoom = canvas.getZoom();
-    zoom *= 0.999 ** delta;
-    if (zoom > 20) zoom = 20;
-    if (zoom < 0.01) zoom = 0.01;
-    canvas.setZoom(zoom);
-    opt.e.preventDefault();
-    opt.e.stopPropagation();
-});
-
-/* --- تحريك اللوحة (Pan) --- */
-let isPanning = false;
-let lastPosX, lastPosY;
-function startPan(e) {
-    isPanning = true;
-    let evt = e.e;
-    lastPosX = evt.clientX;
-    lastPosY = evt.clientY;
-    canvas.discardActiveObject();
-}
-function panMove(e) {
-    if (!isPanning) return;
-    let evt = e.e;
-    let deltaX = evt.clientX - lastPosX;
-    let deltaY = evt.clientY - lastPosY;
-    lastPosX = evt.clientX;
-    lastPosY = evt.clientY;
-    canvas.relativePan({ x: deltaX, y: deltaY });
-}
-function endPan(e) {
-    isPanning = false;
-}
-
-// دعم للأحداث اللمسية لتكبير/تصغير ولوحة الرسم
-function handleTouchStart(e) {
-    if (e.touches && e.touches.length === 1) {
-        startPan({ e: e.touches[0] });
-    }
-}
-function handleTouchMove(e) {
-    if (e.touches && e.touches.length === 1 && isPanning) {
-        panMove({ e: e.touches[0] });
-    }
-}
-function handleTouchEnd(e) {
-    endPan(e);
-}
-
-canvas.off("mouse:down");
-canvas.on("mouse:down", function(e) {
-    if (activeTool !== "move" && activeTool !== "select" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
-        openPropertyModal(e.target, e.pointer.x, e.pointer.y);
-    }
-    if(activeTool === "point" && pointSettings){
-        const pointer = canvas.getPointer(e.e);
-        addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
-    }
-});
-canvas.on("mouse:move", function(e) {
-    if (isPanning) { panMove(e); }
-});
-canvas.on("mouse:up", function(e) {
-    if (isPanning) { endPan(e); }
-});
-
-// إضافة دعم للأحداث اللمسية على الكانفاس
-canvas.upperCanvasEl.addEventListener("touchstart", handleTouchStart, false);
-canvas.upperCanvasEl.addEventListener("touchmove", handleTouchMove, false);
-canvas.upperCanvasEl.addEventListener("touchend", handleTouchEnd, false);
-
-/* --- إعدادات قياس الزاوية --- */
-let anglePoints = [];
-function handleAngleClick(e) {
-    const pointer = canvas.getPointer(e.e);
-    const pt = addNewPointWithSettings(pointer.x, pointer.y, "circle", 5, "#007bff");
-    anglePoints.push(pt);
-    if (anglePoints.length === 2) {
-        canvas.off("mouse:down", handleAngleClick);
-        openAngleModal();
-    }
-}
-function openAngleModal() {
-    document.getElementById("angleModal").style.display = "block";
-}
-function closeAngleModal() {
-    document.getElementById("angleModal").style.display = "none";
-    anglePoints = [];
-}
-function confirmAngleModal() {
-    const showMeasurement = document.getElementById("showAngleCheckbox").checked;
-    const direction = document.getElementById("angleDirectionSelect").value;
-    let desiredAngleDeg = parseFloat(document.getElementById("desiredAngleInput").value) || 45;
-    if (direction === "reversed") desiredAngleDeg = -desiredAngleDeg;
-    if(anglePoints.length !== 2) return;
-    const vertex = anglePoints[0];
-    const firstEnd = anglePoints[1];
-    const initialAngle = Math.atan2(firstEnd.top - vertex.top, firstEnd.left - vertex.left);
-    const secondAngle = initialAngle + (desiredAngleDeg * Math.PI / 180);
-    const length = Math.sqrt((firstEnd.left - vertex.left)**2 + (firstEnd.top - vertex.top)**2);
-    const secondEnd = {
-        x: vertex.left + length * Math.cos(secondAngle),
-        y: vertex.top + length * Math.sin(secondAngle)
-    };
-    const ray1 = new fabric.Line([vertex.left, vertex.top, firstEnd.left, firstEnd.top], {
-        stroke: "#007bff",
-        strokeWidth: 2,
-        selectable: true,
-    });
-    const ray2 = new fabric.Line([vertex.left, vertex.top, secondEnd.x, secondEnd.y], {
-        stroke: "#007bff",
-        strokeWidth: 2,
-        selectable: true,
-    });
-    canvas.add(ray1);
-    canvas.add(ray2);
-    if (showMeasurement) {
-        const txt = new fabric.Text(Math.abs(desiredAngleDeg) + "°", {
-            left: vertex.left + 20,
-            top: vertex.top - 20,
-            fontSize: 16,
-            fill: "#aa00ff",
-            selectable: true,
-        });
-        canvas.add(txt);
-    }
-    canvas.requestRenderAll();
-    anglePoints = [];
-    closeAngleModal();
-    activeTool = null;
-}
-
-/* --- إعدادات الدائرة --- */
-function openCircleModal() {
-    document.getElementById("circleShapeModal").style.display = "block";
-}
-function closeCircleModal() {
-    document.getElementById("circleShapeModal").style.display = "none";
-}
-function confirmCircleModal() {
-    const radiusCm = parseFloat(document.getElementById("circleRadiusInput").value) || 5;
-    const radiusPx = radiusCm * CM_IN_PX;
-    const stroke = document.getElementById("strokeColorCircleInput").value;
-    let fill = document.getElementById("fillColorCircleInput").value;
-    const fillType = document.getElementById("circleFillTypeSelect").value;
-    if(fillType === "empty") {
-        fill = "transparent";
-    }
-    const shapeType = document.getElementById("circleShapeSelect").value;
-    drawCircleCustom(radiusPx, stroke, fill, shapeType);
-    closeCircleModal();
-}
-function drawCircleCustom(radius, stroke, fill, shapeType) {
-    const centerX = canvas.getWidth() / 2;
-    const centerY = canvas.getHeight() / 2;
-    if (shapeType === "half") {
-        const circle = new fabric.Circle({
-            left: centerX,
-            top: centerY,
-            radius: radius,
-            stroke: stroke,
-            fill: fill,
-            strokeWidth: 2,
-            originX: "center",
-            originY: "center",
-        });
-        circle.clipPath = new fabric.Rect({
-            left: 0,
-            top: -radius,
-            width: radius * 2,
-            height: radius,
-            originX: "center",
-            originY: "center",
-        });
-        canvas.add(circle);
-    } else if (shapeType === "quarter") {
-        const circle = new fabric.Circle({
-            left: centerX,
-            top: centerY,
-            radius: radius,
-            stroke: stroke,
-            fill: fill,
-            strokeWidth: 2,
-            originX: "center",
-            originY: "center",
-        });
-        circle.clipPath = new fabric.Rect({
-            left: 0,
-            top: -radius,
-            width: radius,
-            height: radius,
-            originX: "center",
-            originY: "center",
-        });
-        canvas.add(circle);
-    } else {
-        const circle = new fabric.Circle({
-            left: centerX,
-            top: centerY,
-            radius: radius,
-            stroke: stroke,
-            fill: fill,
-            strokeWidth: 2,
-            originX: "center",
-            originY: "center",
-        });
-        canvas.add(circle);
-    }
-}
-
-/* --- تعديل خصائص الرسم --- */
-let currentPropertyObject = null;
-function openPropertyModal(obj, x, y) {
-    currentPropertyObject = obj;
-    document.getElementById("propStrokeColorInput").value = obj.stroke || "#000000";
-    document.getElementById("propStrokeWidthInput").value = obj.strokeWidth || 1;
-    if(obj.fill !== undefined) {
-        document.getElementById("fillColorContainer").style.display = "block";
-        document.getElementById("propFillColorInput").value = obj.fill || "#ffffff";
-    } else {
-        document.getElementById("fillColorContainer").style.display = "none";
-    }
-    let modal = document.getElementById("propertyModal");
-    modal.style.display = "block";
-    let canvasContainer = document.querySelector(".canvas-container");
-    let containerRect = canvasContainer.getBoundingClientRect();
-    modal.style.left = (containerRect.left + x + 20) + "px";
-    modal.style.top = (containerRect.top + y) + "px";
-}
-function closePropertyModal() {
-    document.getElementById("propertyModal").style.display = "none";
-    currentPropertyObject = null;
-}
-function updateObjectProperties() {
-    if(currentPropertyObject) {
-        let strokeColor = document.getElementById("propStrokeColorInput").value;
-        let strokeWidth = parseInt(document.getElementById("propStrokeWidthInput").value) || 1;
-        currentPropertyObject.set("stroke", strokeColor);
-        currentPropertyObject.set("strokeWidth", strokeWidth);
-        if(currentPropertyObject.fill !== undefined) {
-            let fillColor = document.getElementById("propFillColorInput").value;
-            currentPropertyObject.set("fill", fillColor);
-        }
-        canvas.requestRenderAll();
-    }
-    closePropertyModal();
-}
-
-/* --- وظائف رفع الصور ونسخ الرسومات --- */
-function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(f) {
-        fabric.Image.fromURL(f.target.result, function(img) {
-            img.set({
-                left: canvas.getWidth()/2,
-                top: canvas.getHeight()/2,
-                originX: "center",
-                originY: "center"
-            });
-            canvas.add(img);
-        });
-    }
-    reader.readAsDataURL(file);
-}
-function copySelectedObjects() {
-    let selected = canvas.getActiveObjects();
-    if(selected.length > 0) {
-        selected.forEach(obj => {
-            obj.clone(function(clonedObj) {
-                clonedObj.set({
-                    left: obj.left + 10,
-                    top: obj.top + 10,
+        function undoAction() {
+            if (undoStack.length > 1) {
+                restoreInProgress = true;
+                redoStack.push(JSON.stringify(canvas));
+                undoStack.pop();
+                canvas.loadFromJSON(undoStack[undoStack.length - 1], function () {
+                    canvas.renderAll();
+                    restoreInProgress = false;
                 });
-                canvas.add(clonedObj);
-                canvas.requestRenderAll();
-            });
-        });
-        alert("تم نسخ الرسومات المحددة.");
-    } else {
-        alert("الرجاء تحديد رسومات للنسخ.");
-    }
-}
+            }
+        }
+        function redoAction() {
+            if (redoStack.length > 0) {
+                restoreInProgress = true;
+                undoStack.push(JSON.stringify(canvas));
+                const redoState = redoStack.pop();
+                canvas.loadFromJSON(redoState, function () {
+                    canvas.renderAll();
+                    restoreInProgress = false;
+                });
+            }
+        }
+        /* --- أدوات الكانفاس --- */
+        // دالة تفعيل الأداة
+        function activateTool(toolName) {
+            activeTool = toolName;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(toolName + 'Tool').classList.add('active');
+            canvas.isDrawingMode = false; // تعطيل وضع الرسم الحر افتراضياً
+            canvas.selection = true; // تفعيل التحديد افتراضياً
+            canvas.defaultCursor = 'default';
+            canvas.discardActiveObject().renderAll();
 
-/* --- تفعيل الأدوات --- */
-function activateTool(tool) {
-    activeTool = tool;
-    canvas.off("mouse:down");
-    canvas.off("mouse:move");
-    canvas.off("mouse:up");
-    document.querySelectorAll(".tool-btn").forEach((btn) => btn.classList.remove("active"));
-    const toolElement = document.getElementById(
-        tool === "move"
-        ? "moveTool"
-        : (tool === "select" ? "selectTool" : tool + "Tool")
-    );
-    if (toolElement) toolElement.classList.add("active");
-    canvas.isDrawingMode = (tool === "pen");
-    if (tool === "move") {
-        canvas.selection = false;
-        canvas.defaultCursor = "grab";
-        canvas.on("mouse:down", function (e) { startPan(e); });
-        canvas.on("mouse:move", function (e) { if (isPanning) { panMove(e); } });
-        canvas.on("mouse:up", function (e) { if (isPanning) { endPan(e); } });
-    } else if (tool === "select") {
-        canvas.selection = true;
-        canvas.defaultCursor = "default";
-    } else if (tool === "point") {
-        canvas.on("mouse:down", function(e) {
-            if(pointSettings){
-                const pointer = canvas.getPointer(e.e);
-                addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
+            if (toolName === 'pen') {
+                canvas.isDrawingMode = true;
+                canvas.freeDrawingBrush.color = 'red';
+                canvas.freeDrawingBrush.width = 3;
+            } else if (toolName === 'move') {
+                canvas.defaultCursor = 'grab';
+                canvas.selection = false;
+            } else if (toolName === 'select') {
+                canvas.selection = true;
+            }
+        }
+        /* --- وظائف التعامل مع العناصر --- */
+        // وظيفة نسخ العناصر المحددة
+        function copySelectedObjects() {
+            if (canvas.getActiveObject()) {
+                canvas.getActiveObject().clone(function (cloned) {
+                    _clipboard = cloned;
+                });
+            }
+        }
+        // وظيفة اللصق
+        var _clipboard;
+        canvas.on('paste', function (e) {
+            if (_clipboard) {
+                _clipboard.clone(function (clonedObj) {
+                    canvas.discardActiveObject();
+                    clonedObj.set({
+                        left: clonedObj.left + 10,
+                        top: clonedObj.top + 10,
+                        evented: true,
+                    });
+                    if (clonedObj.type === 'active_selection') {
+                        // active selection needs a reference to the canvas.
+                        clonedObj.canvas = canvas;
+                        clonedObj.forEachObject(function (obj) {
+                            canvas.add(obj);
+                        });
+                        // this should solve the "corner is not an object" error.
+                        clonedObj.setCoords();
+                    } else {
+                        canvas.add(clonedObj);
+                    }
+                    _clipboard.top += 10;
+                    _clipboard.left += 10;
+                    canvas.setActiveObject(clonedObj);
+                    canvas.requestRenderAll();
+                });
             }
         });
-    } else if (tool === "link") {
-        linkPoints = [];
-        canvas.on("mouse:down", onCanvasLinkMouseDown);
-    } else if (tool === "angle") {
-        let selectedPoints = canvas.getActiveObjects().filter(obj => obj.isPoint);
-        if(selectedPoints.length === 2){
-            anglePoints = selectedPoints;
-            openAngleModal();
-        } else {
-            anglePoints = [];
-            canvas.on("mouse:down", handleAngleClick);
+        // وظيفة حذف العناصر
+        canvas.on('object:removed', function (options) {
+            saveState();
+        });
+        canvas.on('object:added', function (options) {
+            saveState();
+        });
+        canvas.on('object:modified', function (options) {
+            saveState();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && (e.key === 'c' || e.charCode === 99)) {
+                copySelectedObjects();
+            }
+            if (e.ctrlKey && (e.key === 'v' || e.charCode === 118)) {
+                canvas.fire('paste');
+            }
+            if (event.key === 'Delete') {
+                deleteObject();
+            }
+            if (event.ctrlKey && event.key === 'z') {
+                undoAction();
+            }
+            if (event.ctrlKey && event.key === 'y') {
+                redoAction();
+            }
+        });
+        function deleteObject() {
+            var activeObject = canvas.getActiveObject(),
+                activeGroup = canvas.getActiveGroup();
+            if (activeObject) {
+                canvas.remove(activeObject);
+            } else if (activeGroup) {
+                var objectsInGroup = activeGroup.getObjects();
+                canvas.discardActiveGroup();
+                objectsInGroup.forEach(function (object) {
+                    canvas.remove(object);
+                });
+            }
         }
-    } else if (tool === "phrases") {
-        openTextEditModal();
-    } else if (tool === "delete") {
-        deleteSelected();
-    } else if (tool === "rectangle" || tool === "square" || tool === "triangle" || tool === "rhombus") {
-        openShapeModal(tool);
-    } else if (tool === "line") {
-        openLineModal("line");
-    } else if (tool === "circle") {
-        openCircleModal();
-    } else if (tool === "segment") {
-        openLineModal("segment");
-    } else if (tool === "ray") {
-        drawRay();
-    } else if (tool === "polyFree") {
-        polyFreePoints = [];
-        canvas.on("mouse:down", onCanvasPolyFreeMouseDown);
-        canvas.on("mouse:dblclick", onCanvasPolyFreeDblClick);
-    } else if (tool === "polyRegular") {
-        openPolyRegularModal();
-    } else if (tool === "pen") {
-        // لا تغيير هنا
-    } else if (tool === "save") {
-        saveCanvas();
-    } else {
-        console.log("الأداة غير متوفرة حالياً: " + tool);
-    }
-}
-function deleteSelected() {
-    let actives = canvas.getActiveObjects();
-    if (actives.length) {
-        actives.forEach(obj => canvas.remove(obj));
-        canvas.discardActiveObject();
-        canvas.requestRenderAll();
-    } else {
-        alert("الرجاء اختيار كائن واحد أو أكثر للحذف.");
-    }
-}
-window.onload = () => {
-    activateTool("point");
-    // تحديث حجم الكانفاس لتناسب الأجهزة المحمولة
-    resizeCanvas();
-};
-
-/* --- ضبط حجم لوحة الرسم حسب حجم الشاشة --- */
-function resizeCanvas() {
-    const container = document.querySelector(".canvas-container");
-    if (container) {
-        // نقوم بتحديد عرض الصفحة كاملاً مع قليل من الهوامش
-        container.style.width = (window.innerWidth - 20) + "px";
-        // يمكن تحديد ارتفاع نسبياً إلى العرض مثلاً 75%
-        container.style.height = ((window.innerWidth - 20) * 0.75) + "px";
-        canvas.setWidth(container.clientWidth);
-        canvas.setHeight(container.clientHeight);
-        canvas.calcOffset();
-        canvas.requestRenderAll();
-    }
-}
-window.addEventListener("resize", resizeCanvas);
-
-/* --- تفعيل/إلغاء الشريط الجانبي --- */
-function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    sidebar.classList.toggle("active");
-}
-</script>
-</body>
-</html>
+        /* --- وظائف النوافذ المنبثقة --- */
+        // دالة فتح النافذة المنبثقة
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+        // دالة إغلاق النافذة المنبثقة
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+        /**************** أدوات الرسم ****************/
+        /* --- وظائف التعامل مع النقاط --- */
+        // عند النقر على أداة النقطة
+        function pointToolClicked() {
+            activateTool('point');
+            openModal('pointModal');
+        }
+        function confirmPointModal() {
+            pointSettings = {
+                type: document.getElementById('pointTypeSelect').value,
+                size: parseFloat(document.getElementById('pointSizeInput').value),
+                color: document.getElementById('pointColorInput').value
+            };
+            closeModal('pointModal');
+            canvas.on('mouse:down', addPoint);
+        }
+        function closePointModal() {
+            closeModal('pointModal');
+            canvas.off('mouse:down', addPoint);
+        }
+        // دالة إضافة نقطة
+        function addPoint(options) {
+            if (activeTool === 'point' && pointSettings) {
+                let point;
+                let pointer = canvas.getPointer(options.e);
+                let sizeInPixels = pointSettings.size * CM_IN_PX;
+                if (pointSettings.type === 'circle') {
+                    point = new fabric.Circle({
