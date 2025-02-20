@@ -1245,11 +1245,15 @@
       }
     }, { passive: false });
 
+    // تعديل حدث mouse:down بحيث إذا كانت الأداة "move" نتجاهل باقي الأكواد
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
+      if (activeTool === "move") {
+        return;
+      }
+      
       // إذا كانت الأداة ليست move أو point، نسمح بتحديد أو تعديل الكائنات
       if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
-        // في وضع "select" لا نفتح نافذة الخصائص بحيث يتمكن المستخدم من تحديد وضبط الرسومات بواسطة تحكماتها (Scale / Rotate)
         if(activeTool !== "select"){
           openPropertyModal(e.target, e.pointer.x, e.pointer.y);
         }
@@ -1504,7 +1508,6 @@
         canvas.on("mouse:move", function (e) { if (isPanning) { panMove(e); } });
         canvas.on("mouse:up", function (e) { if (isPanning) { endPan(e); } });
       } else if (tool === "select") {
-        // في وضع التحديد، نريد السماح بتحديد كائن واحد أو أكثر مع ظهور أدوات (Scale/Rotate)
         canvas.selection = true;
         canvas.defaultCursor = "default";
       } else if (tool === "point") {
@@ -1547,7 +1550,6 @@
       } else if (tool === "polyRegular") {
         openPolyRegularModal();
       } else if (tool === "pen") {
-        // لا تغيير هنا؛ سيتم استخدام نمط الرسم الحر الخاص بالفابريك.
       } else if (tool === "save") {
         saveCanvas();
       } else {
@@ -1566,7 +1568,6 @@
     }
     window.onload = () => {
       activateTool("point");
-      // تحديث حجم الكانفاس لتناسب الأجهزة المحمولة
       resizeCanvas();
     };
 
@@ -1574,10 +1575,8 @@
     function resizeCanvas() {
       const container = document.querySelector(".canvas-container");
       if (container) {
-        // تحديد العرض بحيث لا يتجاوز 800px مع هوامش مناسبة
         const newWidth = Math.min(window.innerWidth - 20, 800);
         container.style.width = newWidth + "px";
-        // استخدام نسبة تقريبية 0.75 للارتفاع
         container.style.height = (newWidth * 0.75) + "px";
         canvas.setWidth(container.clientWidth);
         canvas.setHeight(container.clientHeight);
