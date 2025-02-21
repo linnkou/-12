@@ -350,6 +350,11 @@
         <i class="fas fa-expand-arrows-alt"></i>
         <span>توسيط الشاشة</span>
       </div>
+      <!-- زر الدلو للتعبئة -->
+      <div class="tool-btn" id="bucketFillTool" onclick="activateTool('bucket')">
+        <i class="fas fa-fill-drip"></i>
+        <span>دلو تعبئة</span>
+      </div>
     </div>
   </div>
 
@@ -357,6 +362,8 @@
   <input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
 
   <!-- النوافذ المنبثقة -->
+
+  <!-- نافذة إعدادات الشكل المعدلة مع خيار بدون تعبئة -->
   <div id="shapeModal" class="modal">
     <div class="modal-content">
       <h4 id="shapeModalTitle">إعدادات الشكل</h4>
@@ -365,6 +372,9 @@
       <input type="color" id="strokeColorShapeInput" value="#ff5722" />
       <label for="fillColorShapeInput">لون التعبئة:</label>
       <input type="color" id="fillColorShapeInput" value="#ffffff" />
+      <label for="noFillShapeCheckbox">
+        <input type="checkbox" id="noFillShapeCheckbox" /> بدون تعبئة
+      </label>
       <div class="modal-buttons">
         <button onclick="confirmShapeModal()">تأكيد</button>
         <button onclick="closeShapeModal()">إلغاء</button>
@@ -511,6 +521,7 @@
     </div>
   </div>
   
+  <!-- نافذة تعديل خصائص الرسم -->
   <div id="propertyModal" class="modal">
     <div class="modal-content">
       <h4>تعديل الخصائص</h4>
@@ -525,6 +536,19 @@
       <div class="modal-buttons">
         <button onclick="updateObjectProperties()">تحديث</button>
         <button onclick="closePropertyModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة تعبئة الشكل باستخدام الدلو -->
+  <div id="fillModal" class="modal">
+    <div class="modal-content">
+      <h4>إعدادات التعبئة</h4>
+      <label for="fillColorInput">اختر لون التعبئة:</label>
+      <input type="color" id="fillColorInput" value="#ff0000" />
+      <div class="modal-buttons">
+        <button onclick="confirmFillModal()">تأكيد</button>
+        <button onclick="closeFillModal()">إلغاء</button>
       </div>
     </div>
   </div>
@@ -544,6 +568,9 @@
 
     // إعدادات النقطة بعد تأكيدها
     let pointSettings = null;
+
+    // المتغير الخاص بتخزين الشكل الذي سيتم تعبئته باستخدام الدلو
+    let currentFillObject = null;
 
     // إنشاء الكانفاس
     const canvas = new fabric.Canvas("drawingCanvas", {
@@ -761,7 +788,11 @@
     }
     function confirmShapeModal() {
       const stroke = document.getElementById("strokeColorShapeInput").value;
-      const fill = document.getElementById("fillColorShapeInput").value;
+      let fill = document.getElementById("fillColorShapeInput").value;
+      // إذا تم تفعيل خيار "بدون تعبئة" نجعل التعبئة شفافة
+      if(document.getElementById("noFillShapeCheckbox").checked){
+        fill = "transparent";
+      }
       if (currentShape === "rectangle") {
         const widthCm = parseFloat(document.getElementById("rectWidthInput").value) || 10;
         const heightCm = parseFloat(document.getElementById("rectHeightInput").value) || 8;
@@ -1484,6 +1515,23 @@
       }
     }
 
+    /* --- وظيفة تعبئة الشكل باستخدام الدلو --- */
+    function openFillModal(){
+      document.getElementById("fillModal").style.display = "block";
+    }
+    function closeFillModal(){
+      document.getElementById("fillModal").style.display = "none";
+      currentFillObject = null;
+    }
+    function confirmFillModal(){
+      let color = document.getElementById("fillColorInput").value;
+      if(currentFillObject){
+        currentFillObject.set("fill", color);
+        canvas.requestRenderAll();
+      }
+      closeFillModal();
+    }
+
     /* --- تفعيل الأدوات --- */
     function activateTool(tool) {
       activeTool = tool;
@@ -1551,6 +1599,19 @@
       } else if (tool === "pen") {
       } else if (tool === "save") {
         saveCanvas();
+      } else if (tool === "bucket") {
+        // تفعيل أداة الدلو: عند النقر على الكائن سيتم فتح نافذة تعبئة للشكل إذا كان من الأشكال المغلقة
+        activeTool = "bucket";
+        canvas.once("mouse:down", function(e) {
+          let obj = e.target;
+          if (obj && (obj.type === "rect" || obj.type === "circle" || obj.type === "polygon")) {
+            currentFillObject = obj;
+            openFillModal();
+          } else {
+            alert("الرجاء اختيار شكل مغلق للتعبئة.");
+          }
+          activeTool = null;
+        });
       } else {
         console.log("الأداة غير متوفرة حالياً: " + tool);
       }
