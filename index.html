@@ -193,7 +193,8 @@
     .modal-content input[type="color"],
     .modal-content input[type="number"],
     .modal-content input[type="text"],
-    .modal-content select {
+    .modal-content select,
+    .modal-content input[type="checkbox"] {
       width: 100%;
       padding: 6px;
       margin-top: 4px;
@@ -219,7 +220,7 @@
     .modal-buttons button:hover {
       background: #0d47a1;
     }
-    #propertyModal {
+    #propertyModal, #fillModal {
       width: 90%;
       max-width: 300px;
       position: absolute;
@@ -309,6 +310,7 @@
         <li onclick="undoAction()"><i class="fas fa-undo"></i>تراجع</li>
         <li onclick="redoAction()"><i class="fas fa-redo"></i>إعادة</li>
         <li onclick="activateTool('save')"><i class="fas fa-save"></i>حفظ</li>
+        <li onclick="activateTool('fill')"><i class="fas fa-fill-drip"></i>تعبئة</li>
       </ul>
     </div>
   </div>
@@ -361,6 +363,10 @@
         <i class="fas fa-expand-arrows-alt"></i>
         <span>توسيط الشاشة</span>
       </div>
+      <div class="tool-btn" id="fillTool" onclick="activateTool('fill')">
+        <i class="fas fa-fill-drip"></i>
+        <span>تعبئة</span>
+      </div>
     </div>
   </div>
 
@@ -368,10 +374,13 @@
   <input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
 
   <!-- النوافذ المنبثقة -->
+  <!-- نافذة إعدادات الشكل مع خيار الشكل الفارغ -->
   <div id="shapeModal" class="modal">
     <div class="modal-content">
       <h4 id="shapeModalTitle">إعدادات الشكل</h4>
       <div id="dimensionFields"></div>
+      <label for="emptyShapeCheckbox">شكل فارغ بدون تعبئة:</label>
+      <input type="checkbox" id="emptyShapeCheckbox" />
       <label for="strokeColorShapeInput">لون الحدود:</label>
       <input type="color" id="strokeColorShapeInput" value="#ff5722" />
       <label for="fillColorShapeInput">لون التعبئة:</label>
@@ -383,6 +392,7 @@
     </div>
   </div>
   
+  <!-- نافذة إعدادات الخط -->
   <div id="lineModal" class="modal">
     <div class="modal-content">
       <h4 id="lineModalTitle">إعدادات الخط</h4>
@@ -404,6 +414,7 @@
     </div>
   </div>
   
+  <!-- نافذة تحرير النصوص -->
   <div id="textEditModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات النص</h4>
@@ -426,6 +437,7 @@
     </div>
   </div>
   
+  <!-- نافذة إعدادات قياس الزاوية -->
   <div id="angleModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات قياس الزاوية</h4>
@@ -446,6 +458,7 @@
     </div>
   </div>
   
+  <!-- نافذة إعدادات المضلع المنتظم -->
   <div id="polyModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات المضلع المنتظم</h4>
@@ -462,6 +475,7 @@
     </div>
   </div>
   
+  <!-- نافذة إعدادات النقطة -->
   <div id="pointModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات النقطة</h4>
@@ -481,6 +495,7 @@
     </div>
   </div>
   
+  <!-- نافذة إعدادات الحفظ -->
   <div id="saveModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات الحفظ</h4>
@@ -495,6 +510,7 @@
     </div>
   </div>
   
+  <!-- نافذة إعدادات الدائرة -->
   <div id="circleShapeModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات الدائرة</h4>
@@ -522,6 +538,7 @@
     </div>
   </div>
   
+  <!-- نافذة تعديل خصائص الرسم -->
   <div id="propertyModal" class="modal">
     <div class="modal-content">
       <h4>تعديل الخصائص</h4>
@@ -536,6 +553,19 @@
       <div class="modal-buttons">
         <button onclick="updateObjectProperties()">تحديث</button>
         <button onclick="closePropertyModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة تعبئة الشكل (دلو) -->
+  <div id="fillModal" class="modal">
+    <div class="modal-content">
+      <h4>تعبئة الشكل</h4>
+      <label for="fillColorInput">اختر لون التعبئة:</label>
+      <input type="color" id="fillColorInput" value="#00ff00" />
+      <div class="modal-buttons">
+        <button onclick="confirmFillModal()">تأكيد</button>
+        <button onclick="closeFillModal()">إلغاء</button>
       </div>
     </div>
   </div>
@@ -765,6 +795,7 @@
         <input type="number" id="rhombusOffsetInput" value="5" min="1" />`;
       }
       document.getElementById("dimensionFields").innerHTML = fieldsHTML;
+      document.getElementById("emptyShapeCheckbox").checked = false;
       document.getElementById("shapeModal").style.display = "block";
     }
     function closeShapeModal() {
@@ -772,7 +803,11 @@
     }
     function confirmShapeModal() {
       const stroke = document.getElementById("strokeColorShapeInput").value;
-      const fill = document.getElementById("fillColorShapeInput").value;
+      let fill = document.getElementById("fillColorShapeInput").value;
+      // إذا تم تحديد خيار الشكل الفارغ، استخدم تعبئة شفافة
+      if(document.getElementById("emptyShapeCheckbox").checked) {
+        fill = "transparent";
+      }
       if (currentShape === "rectangle") {
         const widthCm = parseFloat(document.getElementById("rectWidthInput").value) || 10;
         const heightCm = parseFloat(document.getElementById("rectHeightInput").value) || 8;
@@ -1151,6 +1186,7 @@
       let widthPx = widthCm * CM_IN_PX;
       let heightPx = heightCm * CM_IN_PX;
       let multiplier = Math.min(widthPx / canvas.getWidth(), heightPx / canvas.getHeight());
+      // تأكيد الحفظ بخلفية بيضاء
       const dataURL = canvas.toDataURL({ multiplier: multiplier, backgroundColor: "#ffffff" });
       const link = document.createElement("a");
       link.download = "work.png";
@@ -1264,7 +1300,7 @@
         return;
       }
       
-      if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
+      if (activeTool !== "move" && activeTool !== "point" && activeTool !== "fill" && !isPanning && e.target && !e.target.nonEditable) {
         if(activeTool !== "select"){
           openPropertyModal(e.target, e.pointer.x, e.pointer.y);
         }
@@ -1272,6 +1308,12 @@
       if(activeTool === "point" && pointSettings){
         const pointer = canvas.getPointer(e.e);
         addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
+      }
+      // إذا كانت الأداة "fill" فتح نافذة تعبئة للشكل عند النقر عليه
+      if(activeTool === "fill"){
+        if(e.target && e.target.fill !== undefined) {
+          openFillModal(e.target, e.pointer.x, e.pointer.y);
+        }
       }
     });
 
@@ -1460,6 +1502,31 @@
       closePropertyModal();
     }
 
+    /* --- نافذة تعبئة الشكل (دلو) --- */
+    let currentFillObject = null;
+    function openFillModal(obj, x, y) {
+      currentFillObject = obj;
+      document.getElementById("fillColorInput").value = obj.fill || "#00ff00";
+      document.getElementById("fillModal").style.display = "block";
+      let canvasContainer = document.querySelector(".canvas-container");
+      let containerRect = canvasContainer.getBoundingClientRect();
+      document.getElementById("fillModal").style.left = (containerRect.left + x + 20) + "px";
+      document.getElementById("fillModal").style.top = (containerRect.top + y) + "px";
+    }
+    function closeFillModal() {
+      document.getElementById("fillModal").style.display = "none";
+      currentFillObject = null;
+    }
+    function confirmFillModal() {
+      if (currentFillObject) {
+        const fillColor = document.getElementById("fillColorInput").value;
+        currentFillObject.set("fill", fillColor);
+        canvas.requestRenderAll();
+      }
+      closeFillModal();
+      activeTool = null;
+    }
+
     /* --- وظائف رفع الصور ونسخ الرسومات --- */
     function handleImageUpload(e) {
       const file = e.target.files[0];
@@ -1504,7 +1571,7 @@
       const toolElement = document.getElementById(
         tool === "move"
           ? "moveTool"
-          : (tool === "select" ? "selectTool" : tool + "Tool")
+          : (tool === "select" ? "selectTool" : (tool === "fill" ? "fillTool" : tool + "Tool"))
       );
       if (toolElement) toolElement.classList.add("active");
       canvas.isDrawingMode = (tool === "pen");
@@ -1560,6 +1627,8 @@
         // إعدادات قلم الحر موجودة ضمن Fabric
       } else if (tool === "save") {
         saveCanvas();
+      } else if (tool === "fill") {
+        // سيتم استخدام الحدث في canvas.on("mouse:down") للتعبئة
       } else {
         console.log("الأداة غير متوفرة حالياً: " + tool);
       }
