@@ -118,7 +118,7 @@
       margin: auto;
       border-radius: 8px;
       width: 100%;
-      height: auto;
+      height: 100%;
     }
     
     .tools {
@@ -230,7 +230,10 @@
     @media (max-width: 600px) {
       .canvas-container {
         width: calc(100% - 20px);
-        height: 60vh; /* استخدام نسبة من ارتفاع الشاشة لضمان ظهور الرسم بالكامل */
+        height: 60vh; /* تم تعديل الارتفاع لكي تظهر الرسومات بشكل طبيعي */
+      }
+      canvas {
+        height: 100%;
       }
     }
     
@@ -736,7 +739,7 @@
       closePointModal();
     }
 
-    /* --- إعدادات الأشكال --- */
+    /* --- دوال رسم الأشكال --- */
     let currentShape = null;
     function openShapeModal(shape) {
       currentShape = shape;
@@ -789,7 +792,6 @@
       closeShapeModal();
     }
 
-    /* --- دوال رسم الأشكال --- */
     function drawRectangle(width, height, stroke, fill) {
       const rect = new fabric.Rect({
         left: canvas.getWidth() / 2 - width / 2,
@@ -1181,7 +1183,6 @@
     });
 
     /* --- دعم التكبير والتصغير بإصبعين --- */
-    // دالة لحساب المسافة بين إصبعين
     function getTouchDistance(touches){
       const touch1 = touches[0];
       const touch2 = touches[1];
@@ -1189,7 +1190,6 @@
       const dy = touch1.clientY - touch2.clientY;
       return Math.sqrt(dx * dx + dy * dy);
     }
-    // التعامل مع أحداث اللمس
     canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
       if (e.touches.length === 1 && activeTool === "move") {
         e.preventDefault();
@@ -1223,6 +1223,11 @@
       }
       if (e.touches.length === 0 && isPanning) {
         endPan(e);
+      }
+      // معالجة لمس الشاشة لنقطة (في حال كانت الأداة "point")
+      if (!isPanning && activeTool === "point" && pointSettings) {
+        const pointer = canvas.getPointer(e);
+        addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
       }
     }, { passive: false });
 
@@ -1486,16 +1491,12 @@
             canvas.requestRenderAll();
           });
         });
-        alert("تم نسخ الرسومات المحددة.");
-      } else {
-        alert("الرجاء تحديد رسومات للنسخ.");
       }
     }
 
     /* --- تفعيل الأدوات --- */
     function activateTool(tool) {
       activeTool = tool;
-      // إزالة كافة مستمعي أحداث الفأرة مسبقًا
       canvas.off("mouse:down");
       canvas.off("mouse:move");
       canvas.off("mouse:up");
@@ -1506,7 +1507,6 @@
           : (tool === "select" ? "selectTool" : tool + "Tool")
       );
       if (toolElement) toolElement.classList.add("active");
-      // في وضع الرسم الحر (pen)
       canvas.isDrawingMode = (tool === "pen");
       if (tool === "move") {
         canvas.selection = false;
@@ -1557,6 +1557,7 @@
       } else if (tool === "polyRegular") {
         openPolyRegularModal();
       } else if (tool === "pen") {
+        // إعدادات قلم الحر موجودة ضمن Fabric
       } else if (tool === "save") {
         saveCanvas();
       } else {
@@ -1586,10 +1587,9 @@
       const container = document.querySelector(".canvas-container");
       if (container) {
         let newWidth, newHeight;
-        // إذا كان عرض الشاشة صغير (هواتف)
         if(window.innerWidth < 768){
           newWidth = window.innerWidth - 20;
-          newHeight = window.innerHeight * 0.6; // استخدام 60٪ من ارتفاع الشاشة
+          newHeight = window.innerHeight * 0.6;
         } else {
           newWidth = Math.min(window.innerWidth - 20, 800);
           newHeight = newWidth * 0.75;
@@ -1607,8 +1607,6 @@
     window.onload = () => {
       activateTool("point");
       resizeCanvas();
-
-      // إضافة مستمع لحدث اللمس على زر "توسيط الشاشة"
       const centerTool = document.getElementById("centerTool");
       if(centerTool) {
         centerTool.addEventListener("touchend", function(e) {
@@ -1616,7 +1614,6 @@
           centerCanvas();
         });
       }
-      // إضافة مستمع لحدث اللمس على زر "توسيط الشاشة" الموجود في شريط الإختصارات
       const centerToolShort = document.getElementById("centerToolShort");
       if(centerToolShort) {
         centerToolShort.addEventListener("touchend", function(e) {
