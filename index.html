@@ -109,7 +109,7 @@
       background: #fff;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       width: 100%;
-      max-width: 1134px; /* 30 cm * 37.8 */
+      max-width: 800px;
       margin: 10px auto;
       overflow: hidden;
     }
@@ -126,7 +126,7 @@
       flex-wrap: wrap;
       gap: 8px;
       width: 100%;
-      max-width: 1134px;
+      max-width: 800px;
       margin: 10px auto 0 auto;
       padding: 10px;
       background: #fafafa;
@@ -309,9 +309,8 @@
       <p>من إعداد الأستاذ العربي بودهير عبد اللطيف</p>
     </div>
     <!-- لوحة الرسم -->
-    <!-- تم تغيير أبعاد اللوحة لتكون 30 سم × 20 سم (30*37.8 ≈ 1134 بكسل و20*37.8 ≈ 756 بكسل) -->
     <div class="canvas-container">
-      <canvas id="drawingCanvas" width="1134" height="756"></canvas>
+      <canvas id="drawingCanvas" width="800" height="600"></canvas>
     </div>
     <!-- شريط الإختصارات -->
     <div class="tools">
@@ -351,11 +350,6 @@
         <i class="fas fa-expand-arrows-alt"></i>
         <span>توسيط الشاشة</span>
       </div>
-      <!-- زر الدلو للتعبئة -->
-      <div class="tool-btn" id="bucketFillTool" onclick="activateTool('bucket')">
-        <i class="fas fa-fill-drip"></i>
-        <span>دلو تعبئة</span>
-      </div>
     </div>
   </div>
 
@@ -363,8 +357,6 @@
   <input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
 
   <!-- النوافذ المنبثقة -->
-
-  <!-- نافذة إعدادات الشكل المعدلة مع خيار بدون تعبئة -->
   <div id="shapeModal" class="modal">
     <div class="modal-content">
       <h4 id="shapeModalTitle">إعدادات الشكل</h4>
@@ -373,9 +365,6 @@
       <input type="color" id="strokeColorShapeInput" value="#ff5722" />
       <label for="fillColorShapeInput">لون التعبئة:</label>
       <input type="color" id="fillColorShapeInput" value="#ffffff" />
-      <label for="noFillShapeCheckbox">
-        <input type="checkbox" id="noFillShapeCheckbox" /> بدون تعبئة
-      </label>
       <div class="modal-buttons">
         <button onclick="confirmShapeModal()">تأكيد</button>
         <button onclick="closeShapeModal()">إلغاء</button>
@@ -484,11 +473,10 @@
   <div id="saveModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات الحفظ</h4>
-      <!-- إعداد الأبعاد لتكون افتراضيًا 30 سم × 20 سم -->
       <label for="saveWidthInput">عرض الورقة (بـ cm):</label>
-      <input type="number" id="saveWidthInput" value="30" min="5" />
+      <input type="number" id="saveWidthInput" value="21" min="5" />
       <label for="saveHeightInput">ارتفاع الورقة (بـ cm):</label>
-      <input type="number" id="saveHeightInput" value="20" min="5" />
+      <input type="number" id="saveHeightInput" value="29.7" min="5" />
       <div class="modal-buttons">
         <button onclick="confirmSaveModal()">حفظ</button>
         <button onclick="closeSaveModal()">إلغاء</button>
@@ -523,7 +511,6 @@
     </div>
   </div>
   
-  <!-- نافذة تعديل خصائص الرسم -->
   <div id="propertyModal" class="modal">
     <div class="modal-content">
       <h4>تعديل الخصائص</h4>
@@ -538,19 +525,6 @@
       <div class="modal-buttons">
         <button onclick="updateObjectProperties()">تحديث</button>
         <button onclick="closePropertyModal()">إلغاء</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- نافذة تعبئة الشكل باستخدام الدلو -->
-  <div id="fillModal" class="modal">
-    <div class="modal-content">
-      <h4>إعدادات التعبئة</h4>
-      <label for="fillColorInput">اختر لون التعبئة:</label>
-      <input type="color" id="fillColorInput" value="#ff0000" />
-      <div class="modal-buttons">
-        <button onclick="confirmFillModal()">تأكيد</button>
-        <button onclick="closeFillModal()">إلغاء</button>
       </div>
     </div>
   </div>
@@ -570,9 +544,6 @@
 
     // إعدادات النقطة بعد تأكيدها
     let pointSettings = null;
-
-    // المتغير الخاص بتخزين الشكل الذي سيتم تعبئته باستخدام الدلو
-    let currentFillObject = null;
 
     // إنشاء الكانفاس
     const canvas = new fabric.Canvas("drawingCanvas", {
@@ -790,11 +761,7 @@
     }
     function confirmShapeModal() {
       const stroke = document.getElementById("strokeColorShapeInput").value;
-      let fill = document.getElementById("fillColorShapeInput").value;
-      // إذا تم تفعيل خيار "بدون تعبئة" نجعل التعبئة شفافة
-      if(document.getElementById("noFillShapeCheckbox").checked){
-        fill = "transparent";
-      }
+      const fill = document.getElementById("fillColorShapeInput").value;
       if (currentShape === "rectangle") {
         const widthCm = parseFloat(document.getElementById("rectWidthInput").value) || 10;
         const heightCm = parseFloat(document.getElementById("rectHeightInput").value) || 8;
@@ -1517,23 +1484,6 @@
       }
     }
 
-    /* --- وظيفة تعبئة الشكل باستخدام الدلو --- */
-    function openFillModal(){
-      document.getElementById("fillModal").style.display = "block";
-    }
-    function closeFillModal(){
-      document.getElementById("fillModal").style.display = "none";
-      currentFillObject = null;
-    }
-    function confirmFillModal(){
-      let color = document.getElementById("fillColorInput").value;
-      if(currentFillObject){
-        currentFillObject.set("fill", color);
-        canvas.requestRenderAll();
-      }
-      closeFillModal();
-    }
-
     /* --- تفعيل الأدوات --- */
     function activateTool(tool) {
       activeTool = tool;
@@ -1601,19 +1551,6 @@
       } else if (tool === "pen") {
       } else if (tool === "save") {
         saveCanvas();
-      } else if (tool === "bucket") {
-        // تفعيل أداة الدلو: عند النقر على الكائن سيتم فتح نافذة تعبئة للشكل إذا كان من الأشكال المغلقة
-        activeTool = "bucket";
-        canvas.once("mouse:down", function(e) {
-          let obj = e.target;
-          if (obj && (obj.type === "rect" || obj.type === "circle" || obj.type === "polygon")) {
-            currentFillObject = obj;
-            openFillModal();
-          } else {
-            alert("الرجاء اختيار شكل مغلق للتعبئة.");
-          }
-          activeTool = null;
-        });
       } else {
         console.log("الأداة غير متوفرة حالياً: " + tool);
       }
@@ -1662,10 +1599,15 @@
     function resizeCanvas() {
       const container = document.querySelector(".canvas-container");
       if (container) {
-        // نحسب العرض بحيث لا يتجاوز عرض النافذة، ونحافظ على نسبة العرض/الارتفاع الخاصة بورقة الرسم (30 سم × 20 سم → نسبة 30/20 = 1.5)
-        const newWidth = Math.min(window.innerWidth - 20, 1134);
-        container.style.width = newWidth + "px";
-        container.style.height = (newWidth / 1.5) + "px";
+        // عند استخدام الأجهزة المحمولة (على سبيل المثال: عرض أقل من 768 بكسل)
+        if(window.innerWidth < 768) {
+          container.style.width = (30 * CM_IN_PX) + "px";   // 30 سم
+          container.style.height = (20 * CM_IN_PX) + "px";  // 20 سم
+        } else {
+          const newWidth = Math.min(window.innerWidth - 20, 800);
+          container.style.width = newWidth + "px";
+          container.style.height = (newWidth * 0.75) + "px";
+        }
         canvas.setWidth(container.clientWidth);
         canvas.setHeight(container.clientHeight);
         canvas.calcOffset();
