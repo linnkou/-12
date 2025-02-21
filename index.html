@@ -265,6 +265,7 @@
         <li onclick="activateTool('phrases')"><i class="fas fa-pencil-alt"></i>كتابة جمل/حروف</li>
         <li onclick="activateTool('angle')"><i class="fas fa-ruler-combined"></i>زاوية</li>
         <li onclick="activateTool('delete')"><i class="fas fa-trash"></i>مسح</li>
+        <li onclick="centerCanvas()"><i class="fas fa-expand-arrows-alt"></i>توسيط الشاشة</li>
       </ul>
     </div>
     <!-- قسم المستقيمات -->
@@ -534,6 +535,9 @@
     let redoStack = [];
     let restoreInProgress = false;
     const CM_IN_PX = 37.8; // بكسل لكل سنتيمتر
+
+    // متغير لدعم الزوم بإصبعين
+    let lastTouchDistance = null;
 
     let gridGroup = null;
     let polyFreePoints = [];
@@ -816,7 +820,7 @@
       const D = (a * a + c * c - b * b) / (2 * a);
       const h = Math.sqrt(c * c - D * D);
       const pt3 = { x: pt1.x + D, y: pt1.y - h };
-           const triangle = new fabric.Polygon([pt1, pt2, pt3], {
+      const triangle = new fabric.Polygon([pt1, pt2, pt3], {
         fill: "transparent",
         stroke: stroke,
         strokeWidth: 2,
@@ -1168,19 +1172,65 @@
       opt.e.stopPropagation();
     });
 
+    /* --- دعم التكبير والتصغير بإصبعين --- */
+    // دالة لحساب المسافة بين إصبعين
+    function getTouchDistance(touches){
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    // التعامل مع أحداث اللمس
+    canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
+      if (e.touches.length === 1 && activeTool === "move") {
+        e.preventDefault();
+        startPan(e);
+      } else if (e.touches.length === 2) {
+        e.preventDefault();
+        lastTouchDistance = getTouchDistance(e.touches);
+      }
+    }, { passive: false });
+
+    canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
+      if (e.touches.length === 1 && activeTool === "move" && isPanning) {
+        e.preventDefault();
+        panMove(e);
+      } else if (e.touches.length === 2) {
+        e.preventDefault();
+        const currentDistance = getTouchDistance(e.touches);
+        if (lastTouchDistance !== null) {
+          const zoomFactor = currentDistance / lastTouchDistance;
+          const zoom = canvas.getZoom() * zoomFactor;
+          canvas.setZoom(zoom);
+          canvas.requestRenderAll();
+        }
+        lastTouchDistance = currentDistance;
+      }
+    }, { passive: false });
+
+    canvas.upperCanvasEl.addEventListener("touchend", function(e) {
+      if (e.touches.length < 2) {
+        lastTouchDistance = null;
+      }
+      if (e.touches.length === 0 && isPanning) {
+        endPan(e);
+      }
+    }, { passive: false });
+
     /* --- تحريك اللوحة (Pan) --- */
     let isPanning = false;
     let lastPosX, lastPosY;
     function startPan(e) {
       isPanning = true;
-      let evt = e.e || e; // التعامل مع أحداث الفأرة واللمس
+      let evt = e.e || e;
       lastPosX = evt.clientX || evt.touches[0].clientX;
       lastPosY = evt.clientY || evt.touches[0].clientY;
       canvas.discardActiveObject();
     }
     function panMove(e) {
       if (!isPanning) return;
-      let evt = e.e || e; // التعامل مع أحداث الفأرة واللمس
+      let evt = e.e || e;
       let currentX = evt.clientX || evt.touches[0].clientX;
       let currentY = evt.clientY || evt.touches[0].clientY;
       let deltaX = currentX - lastPosX;
@@ -1193,49 +1243,6 @@
       isPanning = false;
     }
 
-    // إضافة دعم لأحداث اللمس
-    canvas.upperCanvasEl.addEventListener("touchstart", function(e) {
-      if (e.touches.length === 1 && activeTool === "move") {
-        // إذا كان هناك إصبع واحد والأداة النشطة هي "تحريك الورقة"
-        e.preventDefault();
-        startPan(e);
-      } else if (e.touches.length === 2) {
-        // إذا كان هناك إصبعين، نبدأ الزووم
-        e.preventDefault();
-        lastTouchDistance = getTouchDistance(e.touches); // حفظ المسافة الأولية بين الإصبعين
-      }
-    }, { passive: false });
-
-    canvas.upperCanvasEl.addEventListener("touchmove", function(e) {
-      if (e.touches.length === 1 && activeTool === "move" && isPanning) {
-        // إذا كان هناك إصبع واحد والأداة النشطة هي "تحريك الورقة"
-        e.preventDefault();
-        panMove(e);
-      } else if (e.touches.length === 2) {
-        // إذا كان هناك إصبعين، نطبق الزووم
-        e.preventDefault();
-        const currentDistance = getTouchDistance(e.touches); // حساب المسافة الحالية بين الإصبعين
-        if (lastTouchDistance !== null) {
-          const zoomFactor = currentDistance / lastTouchDistance; // حساب نسبة التكبير/التصغير
-          const zoom = canvas.getZoom() * zoomFactor; // تطبيق النسبة على مستوى الزووم الحالي
-          canvas.setZoom(zoom); // تعيين مستوى الزووم الجديد
-          canvas.requestRenderAll(); // إعادة رسم اللوحة
-        }
-        lastTouchDistance = currentDistance; // تحديث المسافة الأخيرة
-      }
-    }, { passive: false });
-
-    canvas.upperCanvasEl.addEventListener("touchend", function(e) {
-      if (e.touches.length < 2) {
-        // إذا لم يعد هناك إصبعين، نوقف الزووم
-        lastTouchDistance = null;
-      }
-      if (e.touches.length === 0 && isPanning) {
-        // إذا لم يعد هناك لمسات، نوقف التحريك
-        endPan(e);
-      }
-    }, { passive: false });
-
     // تعديل حدث mouse:down بحيث إذا كانت الأداة "move" نتجاهل باقي الأكواد
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
@@ -1244,7 +1251,6 @@
         return;
       }
       
-      // إذا كانت الأداة ليست move أو point، نسمح بتحديد أو تعديل الكائنات
       if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
         if(activeTool !== "select"){
           openPropertyModal(e.target, e.pointer.x, e.pointer.y);
@@ -1492,12 +1498,11 @@
           : (tool === "select" ? "selectTool" : tool + "Tool")
       );
       if (toolElement) toolElement.classList.add("active");
-      // في وضع الرسم الحر (pen) يتم تفعيل نمط الرسم الخاص بالفابريك
+      // في وضع الرسم الحر (pen)
       canvas.isDrawingMode = (tool === "pen");
       if (tool === "move") {
         canvas.selection = false;
         canvas.defaultCursor = "grab";
-        // في وضع التحريك، يتم تفعيل أحداث Pan للفأرة واللمس (كما تم تعديلها في أحداث اللمس)
         canvas.on("mouse:down", function (e) { startPan(e); });
         canvas.on("mouse:move", function (e) { if (isPanning) { panMove(e); } });
         canvas.on("mouse:up", function (e) { if (isPanning) { endPan(e); } });
@@ -1560,6 +1565,14 @@
         alert("الرجاء اختيار كائن واحد أو أكثر للحذف.");
       }
     }
+
+    /* --- دالة توسيط الشاشة --- */
+    function centerCanvas(){
+      canvas.viewportTransform[4] = 0;
+      canvas.viewportTransform[5] = 0;
+      canvas.requestRenderAll();
+    }
+
     window.onload = () => {
       activateTool("point");
       resizeCanvas();
