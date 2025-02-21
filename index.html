@@ -28,11 +28,29 @@
       font-size: 20px;
       font-weight: 700;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
     .header p {
       font-size: 12px;
       margin-top: 4px;
       color: #e3f2fd;
+    }
+    /* أزرار تغيير اللغة في الهيدر */
+    .lang-switcher {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 8px;
+    }
+    .lang-btn {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      padding: 4px 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      border-radius: 4px;
     }
     
     .sidebar {
@@ -44,6 +62,7 @@
       height: auto;
       transition: all 0.3s ease;
       display: flex;
+      flex-direction: column;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -220,18 +239,11 @@
     .modal-buttons button:hover {
       background: #0d47a1;
     }
-    #propertyModal, #fillModal {
-      width: 90%;
-      max-width: 300px;
-      position: absolute;
-      z-index: 1200;
-    }
     
-    /* تعديل استجابة لوحة الرسم على شاشة الهاتف */
     @media (max-width: 600px) {
       .canvas-container {
         width: calc(100% - 20px);
-        height: 60vh; /* تم تعديل الارتفاع لكي تظهر الرسومات بشكل طبيعي */
+        height: 60vh;
       }
       canvas {
         height: 100%;
@@ -267,50 +279,95 @@
 <body>
   <!-- الشريط الجانبي -->
   <div class="sidebar">
+    <!-- فئة الأدوات الأساسية -->
     <div class="tool-category">
-      <h3>أدوات أساسية</h3>
+      <h3 id="basicToolsCategoryTitle" data-key="basicTools">أدوات أساسية</h3>
       <ul class="tool-list">
-        <li onclick="activateTool('move')"><i class="fas fa-hand-paper"></i>تحريك الورقة</li>
-        <li onclick="activateTool('select')"><i class="fas fa-mouse-pointer"></i>تحديد عنصر</li>
-        <li onclick="pointToolClicked()"><i class="fas fa-dot-circle"></i>نقطة</li>
-        <li onclick="activateTool('link')"><i class="fas fa-link"></i>ربط نقاط</li>
-        <li onclick="activateTool('phrases')"><i class="fas fa-pencil-alt"></i>كتابة جمل/حروف</li>
-        <li onclick="activateTool('angle')"><i class="fas fa-ruler-combined"></i>زاوية</li>
-        <li onclick="activateTool('delete')"><i class="fas fa-trash"></i>مسح</li>
-        <li id="centerTool" onclick="centerCanvas()"><i class="fas fa-expand-arrows-alt"></i>توسيط الشاشة</li>
+        <li onclick="activateTool('move')"><i class="fas fa-hand-paper"></i> <span data-key="moveTool">تحريك الورقة</span></li>
+        <li onclick="activateTool('select')"><i class="fas fa-mouse-pointer"></i> <span data-key="selectTool">تحديد عنصر</span></li>
+        <li onclick="pointToolClicked()"><i class="fas fa-dot-circle"></i> <span data-key="pointTool">نقطة</span></li>
+        <li onclick="activateTool('link')"><i class="fas fa-link"></i> <span data-key="linkTool">ربط نقاط</span></li>
+        <li onclick="activateTool('phrases')"><i class="fas fa-pencil-alt"></i> <span data-key="phrasesTool">كتابة جمل/حروف</span></li>
+        <li onclick="activateTool('angle')"><i class="fas fa-ruler-combined"></i> <span data-key="angleTool">زاوية</span></li>
+        <li onclick="activateTool('delete')"><i class="fas fa-trash"></i> <span data-key="deleteTool">مسح</span></li>
+        <li id="centerTool" onclick="centerCanvas()"><i class="fas fa-expand-arrows-alt"></i> <span data-key="centerTool">توسيط الشاشة</span></li>
       </ul>
     </div>
     <!-- قسم المستقيمات -->
     <div class="tool-category">
-      <h3>المستقيمات</h3>
+      <h3 data-key="linesCategory">المستقيمات</h3>
       <ul class="tool-list">
-        <li onclick="openLineModal('line')"><i class="fas fa-ruler"></i>مستقيم</li>
-        <li onclick="openLineModal('segment')"><i class="fas fa-ruler-horizontal"></i>قطعة مستقيمة</li>
-        <li onclick="activateTool('ray')"><i class="fas fa-long-arrow-alt-right"></i>شعاع</li>
+        <li onclick="openLineModal('line')"><i class="fas fa-ruler"></i> <span data-key="line">مستقيم</span></li>
+        <li onclick="openLineModal('segment')"><i class="fas fa-ruler-horizontal"></i> <span data-key="segment">قطعة مستقيمة</span></li>
+        <li onclick="activateTool('ray')"><i class="fas fa-long-arrow-alt-right"></i> <span data-key="ray">شعاع</span></li>
       </ul>
     </div>
+    <!-- قسم الأشكال والمضلعات -->
     <div class="tool-category">
-      <h3>أشكال ومضلعات</h3>
+      <h3 id="shapesCategoryTitle" data-key="shapesCategory">أشكال ومضلعات</h3>
       <ul class="tool-list">
-        <li onclick="openShapeModal('rectangle')"><i class="fas fa-border-style"></i>مستطيل</li>
-        <li onclick="openShapeModal('square')"><i class="fas fa-th-large"></i>مربع</li>
-        <li onclick="openShapeModal('triangle')"><i class="fas fa-play"></i>مثلث</li>
-        <li onclick="openShapeModal('rhombus')"><i class="fas fa-diamond"></i>معين</li>
-        <li onclick="activateTool('polyFree')"><i class="fas fa-draw-polygon"></i>مضلع كيفي</li>
-        <li onclick="openPolyRegularModal()"><i class="fas fa-shapes"></i>مضلع منتظم</li>
-        <li onclick="openCircleModal()"><i class="fas fa-circle"></i>دائرة</li>
+        <li onclick="openShapeModal('rectangle')">
+          <i class="fas fa-border-style"></i> 
+          <span data-key="rectangle">مستطيل</span>
+        </li>
+        <li onclick="openShapeModal('square')">
+          <i class="fas fa-th-large"></i> 
+          <span data-key="square">مربع</span>
+        </li>
+        <li onclick="openShapeModal('triangle')">
+          <i class="fas fa-play"></i> 
+          <span data-key="triangle">مثلث</span>
+        </li>
+        <li onclick="openShapeModal('rhombus')">
+          <i class="fas fa-diamond"></i> 
+          <span data-key="rhombus">معين</span>
+        </li>
+        <li onclick="activateTool('polyFree')">
+          <i class="fas fa-draw-polygon"></i> 
+          <span data-key="polyFree">مضلع كيفي</span>
+        </li>
+        <li onclick="openPolyRegularModal()">
+          <i class="fas fa-shapes"></i> 
+          <span data-key="polyRegular">مضلع منتظم</span>
+        </li>
+        <li onclick="openCircleModal()">
+          <i class="fas fa-circle"></i> 
+          <span data-key="circle">دائرة</span>
+        </li>
       </ul>
     </div>
+    <!-- قسم الأدوات الإضافية -->
     <div class="tool-category">
-      <h3>أدوات إضافية</h3>
+      <h3 id="additionalToolsTitle" data-key="additionalTools">أدوات إضافية</h3>
       <ul class="tool-list">
-        <li onclick="toggleTeacher()"><i class="fas fa-chalkboard"></i>المعلم</li>
-        <li onclick="toggleGrid()"><i class="fas fa-th"></i>التقسيمات</li>
-        <li onclick="toggleTeacherNumbers()"><i class="fas fa-sort-numeric-up"></i>أرقام المعلم</li>
-        <li onclick="undoAction()"><i class="fas fa-undo"></i>تراجع</li>
-        <li onclick="redoAction()"><i class="fas fa-redo"></i>إعادة</li>
-        <li onclick="activateTool('save')"><i class="fas fa-save"></i>حفظ</li>
-        <li onclick="activateTool('bucket')"><i class="fas fa-fill-drip"></i>تعبئة</li>
+        <li onclick="toggleTeacher()">
+          <i class="fas fa-chalkboard"></i> 
+          <span data-key="axes">المحاور</span>
+        </li>
+        <li onclick="toggleGrid()">
+          <i class="fas fa-th"></i> 
+          <span data-key="grid">التقسيمات</span>
+        </li>
+        <li onclick="toggleTeacherNumbers()">
+          <i class="fas fa-sort-numeric-up"></i> 
+          <span data-key="axesNumbers">أرقام المحاور</span>
+        </li>
+        <li onclick="undoAction()">
+          <i class="fas fa-undo"></i> 
+          <span data-key="undo">تراجع</span>
+        </li>
+        <li onclick="redoAction()">
+          <i class="fas fa-redo"></i> 
+          <span data-key="redo">إعادة</span>
+        </li>
+        <li onclick="activateTool('save')">
+          <i class="fas fa-save"></i> 
+          <span data-key="save">حفظ</span>
+        </li>
+        <li onclick="activateTool('bucket')">
+          <i class="fas fa-fill-drip"></i> 
+          <span data-key="bucket">تعبئة</span>
+        </li>
       </ul>
     </div>
   </div>
@@ -318,8 +375,13 @@
   <!-- المحتوى الرئيسي -->
   <div class="main-content">
     <div class="header">
-      برنامج الهندسة
-      <p>من إعداد الأستاذ العربي بودهير عبد اللطيف</p>
+      <div class="lang-switcher">
+        <button class="lang-btn" onclick="changeLanguage('ar')">عربي</button>
+        <button class="lang-btn" onclick="changeLanguage('en')">EN</button>
+        <button class="lang-btn" onclick="changeLanguage('fr')">FR</button>
+      </div>
+      <div id="headerTitle" data-key="headerTitle">برنامج الهندسة</div>
+      <p id="headerSubtitle" data-key="headerSubtitle">من إعداد الأستاذ العربي بودهير عبد اللطيف</p>
     </div>
     <!-- لوحة الرسم -->
     <div class="canvas-container">
@@ -329,15 +391,15 @@
     <div class="tools">
       <div class="tool-btn" id="pointTool" onclick="pointToolClicked()">
         <i class="fas fa-dot-circle"></i>
-        <span>نقطة</span>
+        <span data-key="pointTool">نقطة</span>
       </div>
       <div class="tool-btn" id="lineTool" onclick="openLineModal('line')">
         <i class="fas fa-ruler"></i>
-        <span>مستقيم</span>
+        <span data-key="line">مستقيم</span>
       </div>
       <div class="tool-btn" id="circleTool" onclick="activateTool('circle')">
         <i class="far fa-circle"></i>
-        <span>دائرة</span>
+        <span data-key="circle">دائرة</span>
       </div>
       <div class="tool-btn" id="penTool" onclick="activateTool('pen')">
         <i class="fas fa-pen"></i>
@@ -345,27 +407,27 @@
       </div>
       <div class="tool-btn" id="moveTool" onclick="activateTool('move')">
         <i class="fas fa-hand-paper"></i>
-        <span>تحريك الورقة</span>
+        <span data-key="moveTool">تحريك الورقة</span>
       </div>
       <div class="tool-btn" id="selectTool" onclick="activateTool('select')">
         <i class="fas fa-mouse-pointer"></i>
-        <span>تحديد عنصر</span>
+        <span data-key="selectTool">تحديد عنصر</span>
       </div>
       <div class="tool-btn" id="uploadImageBtn" onclick="document.getElementById('uploadInput').click()">
         <i class="fas fa-upload"></i>
-        <span>رفع صورة</span>
+        <span data-key="uploadImage">رفع صورة</span>
       </div>
       <div class="tool-btn" id="copyDrawingBtn" onclick="copySelectedObjects()">
         <i class="fas fa-clone"></i>
-        <span>نسخ الرسومات</span>
+        <span data-key="copyDrawing">نسخ الرسومات</span>
       </div>
       <div class="tool-btn" id="centerToolShort" onclick="centerCanvas()">
         <i class="fas fa-expand-arrows-alt"></i>
-        <span>توسيط الشاشة</span>
+        <span data-key="centerTool">توسيط الشاشة</span>
       </div>
       <div class="tool-btn" id="fillTool" onclick="activateTool('bucket')">
         <i class="fas fa-fill-drip"></i>
-        <span>تعبئة</span>
+        <span data-key="bucket">تعبئة</span>
       </div>
     </div>
   </div>
@@ -374,20 +436,23 @@
   <input type="file" id="uploadInput" style="display:none" accept="image/*" onchange="handleImageUpload(event)" />
 
   <!-- النوافذ المنبثقة -->
-  <!-- نافذة إعدادات الشكل مع خيار الشكل الفارغ -->
+
+  <!-- نافذة إعدادات الشكل -->
   <div id="shapeModal" class="modal">
     <div class="modal-content">
-      <h4 id="shapeModalTitle">إعدادات الشكل</h4>
-      <div id="dimensionFields"></div>
-      <label for="emptyShapeCheckbox">شكل فارغ بدون تعبئة:</label>
+      <h4 id="shapeModalTitle" data-key="shapeSettings">إعدادات الشكل</h4>
+      <div id="dimensionFields">
+        <!-- يتم تعبئة الحقول ديناميكيًا حسب الشكل -->
+      </div>
+      <label for="emptyShapeCheckbox" data-key="emptyShape">شكل فارغ بدون تعبئة:</label>
       <input type="checkbox" id="emptyShapeCheckbox" />
-      <label for="strokeColorShapeInput">لون الحدود:</label>
+      <label for="strokeColorShapeInput" data-key="strokeColor">لون الحدود:</label>
       <input type="color" id="strokeColorShapeInput" value="#ff5722" />
-      <label for="fillColorShapeInput">لون التعبئة:</label>
+      <label for="fillColorShapeInput" data-key="fillColor">لون التعبئة:</label>
       <input type="color" id="fillColorShapeInput" value="#ffffff" />
       <div class="modal-buttons">
-        <button onclick="confirmShapeModal()">تأكيد</button>
-        <button onclick="closeShapeModal()">إلغاء</button>
+        <button onclick="confirmShapeModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closeShapeModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -395,21 +460,21 @@
   <!-- نافذة إعدادات الخط -->
   <div id="lineModal" class="modal">
     <div class="modal-content">
-      <h4 id="lineModalTitle">إعدادات الخط</h4>
-      <label for="lineStyleSelect">نمط الخط:</label>
+      <h4 id="lineModalTitle" data-key="lineSettings">إعدادات الخط</h4>
+      <label for="lineStyleSelect" data-key="lineStyle">نمط الخط:</label>
       <select id="lineStyleSelect">
-        <option value="solid">غير متقطعة</option>
-        <option value="dashed">متقطعة</option>
+        <option value="solid" data-key="solid">غير متقطعة</option>
+        <option value="dashed" data-key="dashed">متقطعة</option>
       </select>
-      <label for="lineLengthInput">الطول (للقطعة - بالسنتيمتر):</label>
+      <label for="lineLengthInput" data-key="lineLength">الطول (للقطعة - بالسنتيمتر):</label>
       <input type="number" id="lineLengthInput" value="10" min="1" />
-      <label for="lineColorInput">لون الخط:</label>
+      <label for="lineColorInput" data-key="lineColor">لون الخط:</label>
       <input type="color" id="lineColorInput" value="#007bff" />
-      <label for="lineThicknessInput">سماكة الخط:</label>
+      <label for="lineThicknessInput" data-key="lineThickness">سماكة الخط:</label>
       <input type="number" id="lineThicknessInput" value="2" min="1" />
       <div class="modal-buttons">
-        <button onclick="confirmLineModal()">تأكيد</button>
-        <button onclick="closeLineModal()">إلغاء</button>
+        <button onclick="confirmLineModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closeLineModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -417,22 +482,22 @@
   <!-- نافذة تحرير النصوص -->
   <div id="textEditModal" class="modal">
     <div class="modal-content">
-      <h4>إعدادات النص</h4>
-      <label for="userTextInput">النص:</label>
+      <h4 data-key="textSettings">إعدادات النص</h4>
+      <label for="userTextInput" data-key="textLabel">النص:</label>
       <input type="text" id="userTextInput" placeholder="اكتب هنا" />
-      <label for="fontFamilySelect">نوع الخط:</label>
+      <label for="fontFamilySelect" data-key="fontFamily">نوع الخط:</label>
       <select id="fontFamilySelect">
         <option value="Tajawal">Tajawal</option>
         <option value="Arial">Arial</option>
         <option value="Tahoma">Tahoma</option>
       </select>
-      <label for="fontSizeInput">حجم الخط:</label>
+      <label for="fontSizeInput" data-key="fontSize">حجم الخط:</label>
       <input type="number" id="fontSizeInput" value="20" min="10" />
-      <label for="textColorInput">لون النص:</label>
+      <label for="textColorInput" data-key="textColor">لون النص:</label>
       <input type="color" id="textColorInput" value="#333333" />
       <div class="modal-buttons">
-        <button onclick="confirmTextEditModal()">تأكيد</button>
-        <button onclick="closeTextEditModal()">إلغاء</button>
+        <button onclick="confirmTextEditModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closeTextEditModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -440,20 +505,20 @@
   <!-- نافذة إعدادات قياس الزاوية -->
   <div id="angleModal" class="modal">
     <div class="modal-content">
-      <h4>إعدادات قياس الزاوية</h4>
+      <h4 data-key="angleSettings">إعدادات قياس الزاوية</h4>
       <label for="showAngleCheckbox">
-        <input type="checkbox" id="showAngleCheckbox" checked /> إظهار القياس
+        <input type="checkbox" id="showAngleCheckbox" checked /> <span data-key="showAngle">إظهار القياس</span>
       </label>
-      <label for="angleDirectionSelect">اتجاه التشفير:</label>
+      <label for="angleDirectionSelect" data-key="angleDirection">اتجاه التشفير:</label>
       <select id="angleDirectionSelect">
-        <option value="normal">طبيعي</option>
-        <option value="reversed">مقلوب</option>
+        <option value="normal" data-key="normal">طبيعي</option>
+        <option value="reversed" data-key="reversed">مقلوب</option>
       </select>
-      <label for="desiredAngleInput">قيمة الزاوية (بالدرجات):</label>
+      <label for="desiredAngleInput" data-key="desiredAngle">قيمة الزاوية (بالدرجات):</label>
       <input type="number" id="desiredAngleInput" value="45" min="1" max="179" />
       <div class="modal-buttons">
-        <button onclick="confirmAngleModal()">تأكيد</button>
-        <button onclick="closeAngleModal()">إلغاء</button>
+        <button onclick="confirmAngleModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closeAngleModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -461,16 +526,16 @@
   <!-- نافذة إعدادات المضلع المنتظم -->
   <div id="polyModal" class="modal">
     <div class="modal-content">
-      <h4>إعدادات المضلع المنتظم</h4>
-      <label for="sidesInput">عدد الأضلاع:</label>
+      <h4 data-key="polyRegularSettings">إعدادات المضلع المنتظم</h4>
+      <label for="sidesInput" data-key="sides">عدد الأضلاع:</label>
       <input type="number" id="sidesInput" value="5" min="3" />
-      <label for="radiusInput">القطر المطلوب (بـ cm):</label>
+      <label for="radiusInput" data-key="radius">القطر المطلوب (بـ cm):</label>
       <input type="number" id="radiusInput" value="50" min="10" />
-      <label for="strokeColorPolyInput">لون الحدود:</label>
+      <label for="strokeColorPolyInput" data-key="strokeColor">لون الحدود:</label>
       <input type="color" id="strokeColorPolyInput" value="#ff00ff" />
       <div class="modal-buttons">
-        <button onclick="confirmPolyModal()">تأكيد</button>
-        <button onclick="closePolyModal()">إلغاء</button>
+        <button onclick="confirmPolyModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closePolyModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -478,34 +543,34 @@
   <!-- نافذة إعدادات النقطة -->
   <div id="pointModal" class="modal">
     <div class="modal-content">
-      <h4>إعدادات النقطة</h4>
-      <label for="pointTypeSelect">نوع النقطة:</label>
+      <h4 data-key="pointSettings">إعدادات النقطة</h4>
+      <label for="pointTypeSelect" data-key="pointType">نوع النقطة:</label>
       <select id="pointTypeSelect">
-        <option value="circle">دائري</option>
-        <option value="x">X</option>
+        <option value="circle" data-key="circlePoint">دائري</option>
+        <option value="x" data-key="xPoint">X</option>
       </select>
-      <label for="pointSizeInput">الحجم (بـ cm):</label>
+      <label for="pointSizeInput" data-key="pointSize">الحجم (بـ cm):</label>
       <input type="number" id="pointSizeInput" value="0.3" min="0.1" step="0.1" />
-      <label for="pointColorInput">لون النقطة:</label>
+      <label for="pointColorInput" data-key="pointColor">لون النقطة:</label>
       <input type="color" id="pointColorInput" value="#007bff" />
       <div class="modal-buttons">
-        <button onclick="confirmPointModal()">تأكيد</button>
-        <button onclick="closePointModal()">إلغاء</button>
+        <button onclick="confirmPointModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closePointModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
   
-  <!-- نافذة إعدادات الحفظ (مع تعديل خلفية الحفظ ليتم تعيينها إلى الأبيض) -->
+  <!-- نافذة إعدادات الحفظ -->
   <div id="saveModal" class="modal">
     <div class="modal-content">
-      <h4>إعدادات الحفظ</h4>
-      <label for="saveWidthInput">عرض الورقة (بـ cm):</label>
+      <h4 data-key="saveSettings">إعدادات الحفظ</h4>
+      <label for="saveWidthInput" data-key="saveWidth">عرض الورقة (بـ cm):</label>
       <input type="number" id="saveWidthInput" value="21" min="5" />
-      <label for="saveHeightInput">ارتفاع الورقة (بـ cm):</label>
+      <label for="saveHeightInput" data-key="saveHeight">ارتفاع الورقة (بـ cm):</label>
       <input type="number" id="saveHeightInput" value="29.7" min="5" />
       <div class="modal-buttons">
-        <button onclick="confirmSaveModal()">حفظ</button>
-        <button onclick="closeSaveModal()">إلغاء</button>
+        <button onclick="confirmSaveModal()" data-key="confirm">حفظ</button>
+        <button onclick="closeSaveModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -513,27 +578,27 @@
   <!-- نافذة إعدادات الدائرة -->
   <div id="circleShapeModal" class="modal">
     <div class="modal-content">
-      <h4>إعدادات الدائرة</h4>
-      <label for="circleRadiusInput">نصف القطر (بـ cm):</label>
+      <h4 data-key="circleSettings">إعدادات الدائرة</h4>
+      <label for="circleRadiusInput" data-key="circleRadius">نصف القطر (بـ cm):</label>
       <input type="number" id="circleRadiusInput" value="5" min="1" />
-      <label for="strokeColorCircleInput">لون الحدود:</label>
+      <label for="strokeColorCircleInput" data-key="strokeColor">لون الحدود:</label>
       <input type="color" id="strokeColorCircleInput" value="#007bff" />
-      <label for="fillColorCircleInput">لون التعبئة:</label>
+      <label for="fillColorCircleInput" data-key="fillColor">لون التعبئة:</label>
       <input type="color" id="fillColorCircleInput" value="#ffffff" />
-      <label for="circleFillTypeSelect">نوع التعبئة:</label>
+      <label for="circleFillTypeSelect" data-key="fillType">نوع التعبئة:</label>
       <select id="circleFillTypeSelect">
-        <option value="filled">ممتلئة</option>
-        <option value="empty">فارغة</option>
+        <option value="filled" data-key="filled">ممتلئة</option>
+        <option value="empty" data-key="empty">فارغة</option>
       </select>
-      <label for="circleShapeSelect">شكل الدائرة:</label>
+      <label for="circleShapeSelect" data-key="circleShape">شكل الدائرة:</label>
       <select id="circleShapeSelect">
         <option value="normal">عادية</option>
         <option value="half">نصف دائرة</option>
         <option value="quarter">ربع دائرة</option>
       </select>
       <div class="modal-buttons">
-        <button onclick="confirmCircleModal()">تأكيد</button>
-        <button onclick="closeCircleModal()">إلغاء</button>
+        <button onclick="confirmCircleModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closeCircleModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -541,18 +606,18 @@
   <!-- نافذة تعديل خصائص الرسم -->
   <div id="propertyModal" class="modal">
     <div class="modal-content">
-      <h4>تعديل الخصائص</h4>
-      <label for="propStrokeColorInput">لون الحدود:</label>
+      <h4 data-key="propertySettings">تعديل الخصائص</h4>
+      <label for="propStrokeColorInput" data-key="strokeColor">لون الحدود:</label>
       <input type="color" id="propStrokeColorInput" value="#000000" />
-      <label for="propStrokeWidthInput">سماكة الحدود:</label>
+      <label for="propStrokeWidthInput" data-key="strokeWidth">سماكة الحدود:</label>
       <input type="number" id="propStrokeWidthInput" value="2" min="1" />
       <div id="fillColorContainer" style="display: none;">
-        <label for="propFillColorInput">لون التعبئة:</label>
+        <label for="propFillColorInput" data-key="fillColor">لون التعبئة:</label>
         <input type="color" id="propFillColorInput" value="#ffffff" />
       </div>
       <div class="modal-buttons">
-        <button onclick="updateObjectProperties()">تحديث</button>
-        <button onclick="closePropertyModal()">إلغاء</button>
+        <button onclick="updateObjectProperties()" data-key="confirm">تحديث</button>
+        <button onclick="closePropertyModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -560,12 +625,12 @@
   <!-- نافذة تعبئة الشكل (دلو) -->
   <div id="fillModal" class="modal">
     <div class="modal-content">
-      <h4>تعبئة الشكل</h4>
-      <label for="fillColorInput">اختر لون التعبئة:</label>
+      <h4 data-key="fillModalTitle">تعبئة الشكل</h4>
+      <label for="fillColorInput" data-key="chooseFillColor">اختر لون التعبئة:</label>
       <input type="color" id="fillColorInput" value="#00ff00" />
       <div class="modal-buttons">
-        <button onclick="confirmFillModal()">تأكيد</button>
-        <button onclick="closeFillModal()">إلغاء</button>
+        <button onclick="confirmFillModal()" data-key="confirm">تأكيد</button>
+        <button onclick="closeFillModal()" data-key="cancel">إلغاء</button>
       </div>
     </div>
   </div>
@@ -594,7 +659,6 @@
       renderOnAddRemove: true,
       selection: true,
     });
-    // تمكين تحجيم الكائنات بشكل موحد عند تغيير أبعادها
     canvas.uniScaleTransform = true;
 
     let activeTool = null;
@@ -776,25 +840,25 @@
     let currentShape = null;
     function openShapeModal(shape) {
       currentShape = shape;
-      document.getElementById("shapeModalTitle").innerText = "إعدادات " + shape;
+      document.getElementById("shapeModalTitle").innerText = translations[currentLanguage].shapeSettings + " " + shape;
       let fieldsHTML = "";
       if (shape === "rectangle") {
-        fieldsHTML += `<label for="rectWidthInput">عرض المستطيل (بـ cm):</label>
+        fieldsHTML += `<label for="rectWidthInput" data-key="rectWidth">${translations[currentLanguage].rectWidth} (بـ cm):</label>
         <input type="number" id="rectWidthInput" value="10" min="1" />
-        <label for="rectHeightInput">ارتفاع المستطيل (بـ cm):</label>
+        <label for="rectHeightInput" data-key="rectHeight">${translations[currentLanguage].rectHeight} (بـ cm):</label>
         <input type="number" id="rectHeightInput" value="8" min="1" />`;
       } else if (shape === "square") {
-        fieldsHTML += `<label for="squareSizeInput">طول ضلع المربع (بـ cm):</label>
+        fieldsHTML += `<label for="squareSizeInput" data-key="squareSize">${translations[currentLanguage].squareSize} (بـ cm):</label>
         <input type="number" id="squareSizeInput" value="10" min="1" />`;
       } else if (shape === "triangle") {
-        fieldsHTML += `<label for="triBaseInput">طول القاعدة (بـ cm):</label>
+        fieldsHTML += `<label for="triBaseInput" data-key="triBase">${translations[currentLanguage].triBase}</label>
         <input type="number" id="triBaseInput" value="10" min="1" />
-        <label for="triSide2Input">الضلع الثاني (بـ cm):</label>
+        <label for="triSide2Input" data-key="triSide2">${translations[currentLanguage].triSide2}</label>
         <input type="number" id="triSide2Input" value="8" min="1" />
-        <label for="triSide3Input">الضلع الثالث (بـ cm):</label>
+        <label for="triSide3Input" data-key="triSide3">${translations[currentLanguage].triSide3}</label>
         <input type="number" id="triSide3Input" value="8" min="1" />`;
       } else if (shape === "rhombus") {
-        fieldsHTML += `<label for="rhombusOffsetInput">المسافة من المركز (بـ cm):</label>
+        fieldsHTML += `<label for="rhombusOffsetInput" data-key="rhombusOffset">${translations[currentLanguage].rhombusOffset}</label>
         <input type="number" id="rhombusOffsetInput" value="5" min="1" />`;
       }
       document.getElementById("dimensionFields").innerHTML = fieldsHTML;
@@ -807,7 +871,6 @@
     function confirmShapeModal() {
       const stroke = document.getElementById("strokeColorShapeInput").value;
       let fill = document.getElementById("fillColorShapeInput").value;
-      // إذا تم تحديد خيار الشكل الفارغ، استخدم تعبئة شفافة
       if(document.getElementById("emptyShapeCheckbox").checked) {
         fill = "transparent";
       }
@@ -901,7 +964,7 @@
     let currentLineTool = null;
     function openLineModal(tool) {
       currentLineTool = tool;
-      document.getElementById("lineModalTitle").innerText = "إعدادات " + (tool === "line" ? "المستقيم" : "القطعة");
+      document.getElementById("lineModalTitle").innerText = translations[currentLanguage].lineSettings + " (" + (tool === "line" ? translations[currentLanguage].line : translations[currentLanguage].segment) + ")";
       document.getElementById("lineModal").style.display = "block";
     }
     function closeLineModal() {
@@ -1060,7 +1123,7 @@
       // يتم استخدام النافذة المنبثقة لهذا المثال.
     }
 
-    /* --- عرض المحاور "المعلم" --- */
+    /* --- عرض المحاور "المحاور" --- */
     let teacherGroup = null;
     function addTeacher() {
       if (teacherGroup) return;
@@ -1094,7 +1157,7 @@
       else addTeacher();
     }
 
-    /* --- أرقام المعلم --- */
+    /* --- أرقام المحاور --- */
     let teacherNumbersGroup = null;
     function addTeacherNumbers() {
       if (teacherNumbersGroup) return;
@@ -1189,12 +1252,10 @@
       let widthPx = widthCm * CM_IN_PX;
       let heightPx = heightCm * CM_IN_PX;
       let multiplier = Math.min(widthPx / canvas.getWidth(), heightPx / canvas.getHeight());
-      // لجعل الخلفية بيضاء: نخزن الخلفية الحالية ونغيرها مؤقتاً إلى الأبيض
       const prevBg = canvas.backgroundColor;
       canvas.backgroundColor = "#ffffff";
       canvas.renderAll();
       const dataURL = canvas.toDataURL({ multiplier: multiplier });
-      // استعادة الخلفية السابقة
       canvas.backgroundColor = prevBg;
       canvas.renderAll();
       const link = document.createElement("a");
@@ -1269,7 +1330,6 @@
       if (e.touches.length === 0 && isPanning) {
         endPan(e);
       }
-      // معالجة لمس الشاشة لنقطة (في حال كانت الأداة "point")
       if (!isPanning && activeTool === "point" && pointSettings) {
         const pointer = canvas.getPointer(e);
         addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
@@ -1301,7 +1361,6 @@
       isPanning = false;
     }
 
-    // تعديل حدث mouse:down بحيث نضيف معالجة خاصة للأداة "bucket"
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
       if (activeTool === "move") {
@@ -1309,7 +1368,6 @@
         return;
       }
       
-      // في حال كانت الأداة "bucket" سيتم تفعيل الدلو للتعبئة
       if (activeTool === "bucket") {
         e.preventDefault();
         let obj = e.target;
@@ -1520,7 +1578,6 @@
     }
 
     /* --- نافذة تعبئة الشكل (دلو) --- */
-    // سنستخدم متغيرًا لتخزين الكائن أو المجموعة (المصفوفة) التي سيتم تعبئتها
     let currentFillObjects = [];
     function openFillModal(obj, x, y) {
       if (!Array.isArray(obj)) {
@@ -1654,7 +1711,6 @@
       } else if (tool === "save") {
         saveCanvas();
       }
-      // تفعيل أداة الدلو
       else if (tool === "bucket") {
         activeTool = "bucket";
         canvas.once("mouse:down", function(e) {
@@ -1728,7 +1784,292 @@
           centerCanvas();
         });
       }
+      changeLanguage('ar');
     };
+
+    /* ===================== ترجمة الواجهة ===================== */
+    const translations = {
+      ar: {
+        headerTitle: "برنامج الهندسة",
+        headerSubtitle: "من إعداد الأستاذ العربي بودهير عبد اللطيف",
+        basicTools: "أدوات أساسية",
+        moveTool: "تحريك الورقة",
+        selectTool: "تحديد عنصر",
+        pointTool: "نقطة",
+        linkTool: "ربط نقاط",
+        phrasesTool: "كتابة جمل/حروف",
+        angleTool: "زاوية",
+        deleteTool: "مسح",
+        centerTool: "توسيط الشاشة",
+        linesCategory: "المستقيمات",
+        line: "مستقيم",
+        segment: "قطعة مستقيمة",
+        ray: "شعاع",
+        shapesCategory: "أشكال ومضلعات",
+        rectangle: "مستطيل",
+        square: "مربع",
+        triangle: "مثلث",
+        rhombus: "معين",
+        polyFree: "مضلع كيفي",
+        polyRegular: "مضلع منتظم",
+        circle: "دائرة",
+        additionalTools: "أدوات إضافية",
+        axes: "المحاور",
+        grid: "التقسيمات",
+        axesNumbers: "أرقام المحاور",
+        undo: "تراجع",
+        redo: "إعادة",
+        save: "حفظ",
+        bucket: "تعبئة",
+        uploadImage: "رفع صورة",
+        copyDrawing: "نسخ الرسومات",
+        shapeSettings: "إعدادات الشكل",
+        emptyShape: "شكل فارغ بدون تعبئة",
+        strokeColor: "لون الحدود",
+        fillColor: "لون التعبئة",
+        lineSettings: "إعدادات الخط",
+        lineStyle: "نمط الخط",
+        lineLength: "الطول (للقطعة - بالسنتيمتر)",
+        lineColor: "لون الخط",
+        lineThickness: "سماكة الخط",
+        textSettings: "إعدادات النص",
+        textLabel: "النص",
+        fontFamily: "نوع الخط",
+        fontSize: "حجم الخط",
+        textColor: "لون النص",
+        angleSettings: "إعدادات قياس الزاوية",
+        showAngle: "إظهار القياس",
+        angleDirection: "اتجاه التشفير",
+        desiredAngle: "قيمة الزاوية (بالدرجات)",
+        polyRegularSettings: "إعدادات المضلع المنتظم",
+        sides: "عدد الأضلاع",
+        radius: "القطر المطلوب (بـ cm)",
+        pointSettings: "إعدادات النقطة",
+        pointType: "نوع النقطة",
+        pointSize: "الحجم (بـ cm)",
+        pointColor: "لون النقطة",
+        saveSettings: "إعدادات الحفظ",
+        saveWidth: "عرض الورقة (بـ cm)",
+        saveHeight: "ارتفاع الورقة (بـ cm)",
+        circleSettings: "إعدادات الدائرة",
+        circleRadius: "نصف القطر (بـ cm)",
+        fillType: "نوع التعبئة",
+        circleShape: "شكل الدائرة",
+        propertySettings: "تعديل الخصائص",
+        strokeWidth: "سماكة الحدود",
+        fillModalTitle: "تعبئة الشكل",
+        chooseFillColor: "اختر لون التعبئة",
+        confirm: "تأكيد",
+        cancel: "إلغاء",
+        rectWidth: "عرض المستطيل",
+        rectHeight: "ارتفاع المستطيل",
+        squareSize: "طول ضلع المربع",
+        solid: "غير متقطعة",
+        dashed: "متقطعة",
+        filled: "ممتلئة",
+        empty: "فارغة",
+        normal: "طبيعي",
+        reversed: "مقلوب",
+        circlePoint: "دائري",
+        xPoint: "X",
+        triBase: "طول القاعدة (بـ cm):",
+        triSide2: "الضلع الثاني (بـ cm):",
+        triSide3: "الضلع الثالث (بـ cm):",
+        rhombusOffset: "المسافة من المركز (بـ cm):"
+      },
+      en: {
+        headerTitle: "Geometry Program",
+        headerSubtitle: "Prepared by Elarbi Boudihir Abdellatif",
+        basicTools: "Basic Tools",
+        moveTool: "Move Canvas",
+        selectTool: "Select Object",
+        pointTool: "Point",
+        linkTool: "Link Points",
+        phrasesTool: "Write Text",
+        angleTool: "Angle",
+        deleteTool: "Delete",
+        centerTool: "Center Canvas",
+        linesCategory: "Lines",
+        line: "Line",
+        segment: "Segment",
+        ray: "Ray",
+        shapesCategory: "Shapes & Polygons",
+        rectangle: "Rectangle",
+        square: "Square",
+        triangle: "Triangle",
+        rhombus: "Rhombus",
+        polyFree: "Free Polygon",
+        polyRegular: "Regular Polygon",
+        circle: "Circle",
+        additionalTools: "Additional Tools",
+        axes: "Axes",
+        grid: "Grid",
+        axesNumbers: "Axes Numbers",
+        undo: "Undo",
+        redo: "Redo",
+        save: "Save",
+        bucket: "Bucket Fill",
+        uploadImage: "Upload Image",
+        copyDrawing: "Copy Drawings",
+        shapeSettings: "Shape Settings",
+        emptyShape: "Empty Shape (No Fill)",
+        strokeColor: "Stroke Color",
+        fillColor: "Fill Color",
+        lineSettings: "Line Settings",
+        lineStyle: "Line Style",
+        lineLength: "Length (for segments - in cm)",
+        lineColor: "Line Color",
+        lineThickness: "Line Thickness",
+        textSettings: "Text Settings",
+        textLabel: "Text",
+        fontFamily: "Font Family",
+        fontSize: "Font Size",
+        textColor: "Text Color",
+        angleSettings: "Angle Settings",
+        showAngle: "Show Measurement",
+        angleDirection: "Angle Direction",
+        desiredAngle: "Angle Value (in degrees)",
+        polyRegularSettings: "Regular Polygon Settings",
+        sides: "Number of Sides",
+        radius: "Desired Diameter (in cm)",
+        pointSettings: "Point Settings",
+        pointType: "Point Type",
+        pointSize: "Size (in cm)",
+        pointColor: "Point Color",
+        saveSettings: "Save Settings",
+        saveWidth: "Paper Width (in cm)",
+        saveHeight: "Paper Height (in cm)",
+        circleSettings: "Circle Settings",
+        circleRadius: "Radius (in cm)",
+        fillType: "Fill Type",
+        circleShape: "Circle Shape",
+        propertySettings: "Edit Properties",
+        strokeWidth: "Stroke Width",
+        fillModalTitle: "Fill Shape",
+        chooseFillColor: "Choose Fill Color",
+        confirm: "Confirm",
+        cancel: "Cancel",
+        rectWidth: "Rectangle Width",
+        rectHeight: "Rectangle Height",
+        squareSize: "Square Side Length",
+        solid: "Solid",
+        dashed: "Dashed",
+        filled: "Filled",
+        empty: "Empty",
+        normal: "Normal",
+        reversed: "Reversed",
+        circlePoint: "Circular",
+        xPoint: "X",
+        triBase: "Base Length (in cm):",
+        triSide2: "Second Side (in cm):",
+        triSide3: "Third Side (in cm):",
+        rhombusOffset: "Distance from Center (in cm):"
+      },
+      fr: {
+        headerTitle: "Programme de Géométrie",
+        headerSubtitle: "Préparé par Elarbi Boudihir Abdellatif",
+        basicTools: "Outils de Base",
+        moveTool: "Déplacer le Canevas",
+        selectTool: "Sélectionner l'Objet",
+        pointTool: "Point",
+        linkTool: "Relier les Points",
+        phrasesTool: "Écrire du Texte",
+        angleTool: "Angle",
+        deleteTool: "Supprimer",
+        centerTool: "Centrer le Canevas",
+        linesCategory: "Lignes",
+        line: "Ligne",
+        segment: "Segment",
+        ray: "Rayon",
+        shapesCategory: "Formes & Polygones",
+        rectangle: "Rectangle",
+        square: "Carré",
+        triangle: "Triangle",
+        rhombus: "Losange",
+        polyFree: "Polygone Libre",
+        polyRegular: "Polygone Régulier",
+        circle: "Cercle",
+        additionalTools: "Outils Supplémentaires",
+        axes: "Axes",
+        grid: "Grille",
+        axesNumbers: "Numéros des axes",
+        undo: "Annuler",
+        redo: "Rétablir",
+        save: "Enregistrer",
+        bucket: "Remplissage",
+        uploadImage: "Télécharger l'image",
+        copyDrawing: "Copier les dessins",
+        shapeSettings: "Paramètres de la Forme",
+        emptyShape: "Forme Vide (Sans Remplissage)",
+        strokeColor: "Couleur du Contour",
+        fillColor: "Couleur de Remplissage",
+        lineSettings: "Paramètres de la Ligne",
+        lineStyle: "Style de la Ligne",
+        lineLength: "Longueur (pour segments - en cm)",
+        lineColor: "Couleur de la Ligne",
+        lineThickness: "Épaisseur de la Ligne",
+        textSettings: "Paramètres du Texte",
+        textLabel: "Texte",
+        fontFamily: "Police",
+        fontSize: "Taille de la Police",
+        textColor: "Couleur du Texte",
+        angleSettings: "Paramètres de l'Angle",
+        showAngle: "Afficher la Mesure",
+        angleDirection: "Direction de l'Angle",
+        desiredAngle: "Valeur de l'Angle (en degrés)",
+        polyRegularSettings: "Paramètres du Polygone Régulier",
+        sides: "Nombre de Côtés",
+        radius: "Diamètre désiré (en cm)",
+        pointSettings: "Paramètres du Point",
+        pointType: "Type de Point",
+        pointSize: "Taille (en cm)",
+        pointColor: "Couleur du Point",
+        saveSettings: "Paramètres d'Enregistrement",
+        saveWidth: "Largeur du Papier (en cm)",
+        saveHeight: "Hauteur du Papier (en cm)",
+        circleSettings: "Paramètres du Cercle",
+        circleRadius: "Rayon (en cm)",
+        fillType: "Type de Remplissage",
+        circleShape: "Forme du Cercle",
+        propertySettings: "Modifier les Propriétés",
+        strokeWidth: "Épaisseur du Contour",
+        fillModalTitle: "Remplissage de Forme",
+        chooseFillColor: "Choisissez la Couleur de Remplissage",
+        confirm: "Confirmer",
+        cancel: "Annuler",
+        rectWidth: "Largeur du Rectangle",
+        rectHeight: "Hauteur du Rectangle",
+        squareSize: "Longueur du côté du Carré",
+        solid: "Continu",
+        dashed: "Pointillé",
+        filled: "Rempli",
+        empty: "Vide",
+        normal: "Normal",
+        reversed: "Inversé",
+        circlePoint: "Circulaire",
+        xPoint: "X",
+        triBase: "Longueur de la base (en cm):",
+        triSide2: "Deuxième côté (en cm):",
+        triSide3: "Troisième côté (en cm):",
+        rhombusOffset: "Distance du centre (en cm):"
+      }
+    };
+
+    let currentLanguage = 'ar';
+
+    function changeLanguage(lang) {
+      currentLanguage = lang;
+      document.getElementById("headerTitle").innerText = translations[lang].headerTitle;
+      document.getElementById("headerSubtitle").innerText = translations[lang].headerSubtitle;
+      document.getElementById("basicToolsCategoryTitle").innerText = translations[lang].basicTools;
+      document.getElementById("shapesCategoryTitle").innerText = translations[lang].shapesCategory;
+      document.getElementById("additionalToolsTitle").innerText = translations[lang].additionalTools;
+      document.querySelectorAll("[data-key]").forEach(el => {
+        const key = el.getAttribute("data-key");
+        if(translations[lang][key])
+          el.innerText = translations[lang][key];
+      });
+    }
   </script>
 </body>
 </html>
