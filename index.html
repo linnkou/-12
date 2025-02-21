@@ -226,6 +226,14 @@
       z-index: 1200;
     }
     
+    /* تعديل استجابة لوحة الرسم على شاشة الهاتف */
+    @media (max-width: 600px) {
+      .canvas-container {
+        width: calc(100% - 20px);
+        height: 60vh; /* استخدام نسبة من ارتفاع الشاشة لضمان ظهور الرسم بالكامل */
+      }
+    }
+    
     @media (min-width: 768px) {
       body {
         flex-direction: row;
@@ -1573,6 +1581,29 @@
       canvas.requestRenderAll();
     }
 
+    /* --- ضبط حجم لوحة الرسم حسب حجم الشاشة --- */
+    function resizeCanvas() {
+      const container = document.querySelector(".canvas-container");
+      if (container) {
+        let newWidth, newHeight;
+        // إذا كان عرض الشاشة صغير (هواتف)
+        if(window.innerWidth < 768){
+          newWidth = window.innerWidth - 20;
+          newHeight = window.innerHeight * 0.6; // استخدام 60٪ من ارتفاع الشاشة
+        } else {
+          newWidth = Math.min(window.innerWidth - 20, 800);
+          newHeight = newWidth * 0.75;
+        }
+        container.style.width = newWidth + "px";
+        container.style.height = newHeight + "px";
+        canvas.setWidth(container.clientWidth);
+        canvas.setHeight(container.clientHeight);
+        canvas.calcOffset();
+        canvas.requestRenderAll();
+      }
+    }
+    window.addEventListener("resize", resizeCanvas);
+
     window.onload = () => {
       activateTool("point");
       resizeCanvas();
@@ -1594,27 +1625,6 @@
         });
       }
     };
-
-    /* --- ضبط حجم لوحة الرسم حسب حجم الشاشة --- */
-    function resizeCanvas() {
-      const container = document.querySelector(".canvas-container");
-      if (container) {
-        // عند استخدام الأجهزة المحمولة (على سبيل المثال: عرض أقل من 768 بكسل)
-        if(window.innerWidth < 768) {
-          container.style.width = (30 * CM_IN_PX) + "px";   // 30 سم
-          container.style.height = (20 * CM_IN_PX) + "px";  // 20 سم
-        } else {
-          const newWidth = Math.min(window.innerWidth - 20, 800);
-          container.style.width = newWidth + "px";
-          container.style.height = (newWidth * 0.75) + "px";
-        }
-        canvas.setWidth(container.clientWidth);
-        canvas.setHeight(container.clientHeight);
-        canvas.calcOffset();
-        canvas.requestRenderAll();
-      }
-    }
-    window.addEventListener("resize", resizeCanvas);
   </script>
 </body>
 </html>
