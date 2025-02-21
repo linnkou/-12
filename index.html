@@ -310,7 +310,7 @@
         <li onclick="undoAction()"><i class="fas fa-undo"></i>تراجع</li>
         <li onclick="redoAction()"><i class="fas fa-redo"></i>إعادة</li>
         <li onclick="activateTool('save')"><i class="fas fa-save"></i>حفظ</li>
-        <li onclick="activateTool('fill')"><i class="fas fa-fill-drip"></i>تعبئة</li>
+        <li onclick="activateTool('bucket')"><i class="fas fa-fill-drip"></i>تعبئة</li>
       </ul>
     </div>
   </div>
@@ -363,7 +363,7 @@
         <i class="fas fa-expand-arrows-alt"></i>
         <span>توسيط الشاشة</span>
       </div>
-      <div class="tool-btn" id="fillTool" onclick="activateTool('fill')">
+      <div class="tool-btn" id="fillTool" onclick="activateTool('bucket')">
         <i class="fas fa-fill-drip"></i>
         <span>تعبئة</span>
       </div>
@@ -495,7 +495,7 @@
     </div>
   </div>
   
-  <!-- نافذة إعدادات الحفظ -->
+  <!-- نافذة إعدادات الحفظ (مع تعديل خلفية الحفظ ليتم تعيينها إلى الأبيض) -->
   <div id="saveModal" class="modal">
     <div class="modal-content">
       <h4>إعدادات الحفظ</h4>
@@ -585,6 +585,9 @@
 
     // إعدادات النقطة بعد تأكيدها
     let pointSettings = null;
+    
+    // تعريف متغير لتخزين العنصر الذي سيتم تعبئته بواسطة الدلو
+    let currentFillObject = null;
 
     // إنشاء الكانفاس
     const canvas = new fabric.Canvas("drawingCanvas", {
@@ -1186,8 +1189,14 @@
       let widthPx = widthCm * CM_IN_PX;
       let heightPx = heightCm * CM_IN_PX;
       let multiplier = Math.min(widthPx / canvas.getWidth(), heightPx / canvas.getHeight());
-      // تأكيد الحفظ بخلفية بيضاء
-      const dataURL = canvas.toDataURL({ multiplier: multiplier, backgroundColor: "#ffffff" });
+      // لجعل الخلفية بيضاء: نخزن الخلفية الحالية ونغيرها مؤقتاً إلى الأبيض
+      const prevBg = canvas.backgroundColor;
+      canvas.backgroundColor = "#ffffff";
+      canvas.renderAll();
+      const dataURL = canvas.toDataURL({ multiplier: multiplier });
+      // استعادة الخلفية السابقة
+      canvas.backgroundColor = prevBg;
+      canvas.renderAll();
       const link = document.createElement("a");
       link.download = "work.png";
       link.href = dataURL;
@@ -1292,7 +1301,7 @@
       isPanning = false;
     }
 
-    // تعديل حدث mouse:down بحيث إذا كانت الأداة "move" نتجاهل باقي الأكواد
+    // تعديل حدث mouse:down بحيث نضيف معالجة خاصة للأداة "bucket"
     canvas.off("mouse:down");
     canvas.on("mouse:down", function(e) {
       if (activeTool === "move") {
@@ -1300,7 +1309,21 @@
         return;
       }
       
-      if (activeTool !== "move" && activeTool !== "point" && activeTool !== "fill" && !isPanning && e.target && !e.target.nonEditable) {
+      // في حال كانت الأداة "bucket" سيتم تفعيل الدلو للتعبئة
+      if (activeTool === "bucket") {
+        e.preventDefault();
+        let obj = e.target;
+        if (obj && (obj.type === "rect" || obj.type === "circle" || obj.type === "polygon")) {
+          currentFillObject = obj;
+          openFillModal();
+        } else {
+          alert("الرجاء اختيار شكل مغلق للتعبئة.");
+        }
+        activeTool = null;
+        return;
+      }
+      
+      if (activeTool !== "move" && activeTool !== "point" && !isPanning && e.target && !e.target.nonEditable) {
         if(activeTool !== "select"){
           openPropertyModal(e.target, e.pointer.x, e.pointer.y);
         }
@@ -1308,12 +1331,6 @@
       if(activeTool === "point" && pointSettings){
         const pointer = canvas.getPointer(e.e);
         addNewPointWithSettings(pointer.x, pointer.y, pointSettings.type, pointSettings.size, pointSettings.color);
-      }
-      // إذا كانت الأداة "fill" فتح نافذة تعبئة للشكل عند النقر عليه
-      if(activeTool === "fill"){
-        if(e.target && e.target.fill !== undefined) {
-          openFillModal(e.target, e.pointer.x, e.pointer.y);
-        }
       }
     });
 
@@ -1503,24 +1520,33 @@
     }
 
     /* --- نافذة تعبئة الشكل (دلو) --- */
-    let currentFillObject = null;
+    // سنستخدم متغيرًا لتخزين الكائن أو المجموعة (المصفوفة) التي سيتم تعبئتها
+    let currentFillObjects = [];
     function openFillModal(obj, x, y) {
-      currentFillObject = obj;
-      document.getElementById("fillColorInput").value = obj.fill || "#00ff00";
+      if (!Array.isArray(obj)) {
+        currentFillObjects = [obj || currentFillObject];
+      } else {
+        currentFillObjects = obj;
+      }
+      document.getElementById("fillColorInput").value = currentFillObjects[0].fill || "#00ff00";
       document.getElementById("fillModal").style.display = "block";
       let canvasContainer = document.querySelector(".canvas-container");
       let containerRect = canvasContainer.getBoundingClientRect();
-      document.getElementById("fillModal").style.left = (containerRect.left + x + 20) + "px";
-      document.getElementById("fillModal").style.top = (containerRect.top + y) + "px";
+      document.getElementById("fillModal").style.left = (containerRect.left + (x || 20)) + "px";
+      document.getElementById("fillModal").style.top = (containerRect.top + (y || 20)) + "px";
     }
     function closeFillModal() {
       document.getElementById("fillModal").style.display = "none";
-      currentFillObject = null;
+      currentFillObjects = [];
     }
     function confirmFillModal() {
-      if (currentFillObject) {
+      if (currentFillObjects.length > 0) {
         const fillColor = document.getElementById("fillColorInput").value;
-        currentFillObject.set("fill", fillColor);
+        currentFillObjects.forEach(obj => {
+          if(obj.fill !== undefined) {
+            obj.set("fill", fillColor);
+          }
+        });
         canvas.requestRenderAll();
       }
       closeFillModal();
@@ -1571,7 +1597,7 @@
       const toolElement = document.getElementById(
         tool === "move"
           ? "moveTool"
-          : (tool === "select" ? "selectTool" : (tool === "fill" ? "fillTool" : tool + "Tool"))
+          : (tool === "select" ? "selectTool" : (tool === "bucket" ? "fillTool" : tool + "Tool"))
       );
       if (toolElement) toolElement.classList.add("active");
       canvas.isDrawingMode = (tool === "pen");
@@ -1627,8 +1653,20 @@
         // إعدادات قلم الحر موجودة ضمن Fabric
       } else if (tool === "save") {
         saveCanvas();
-      } else if (tool === "fill") {
-        // سيتم استخدام الحدث في canvas.on("mouse:down") للتعبئة
+      }
+      // تفعيل أداة الدلو
+      else if (tool === "bucket") {
+        activeTool = "bucket";
+        canvas.once("mouse:down", function(e) {
+          let obj = e.target;
+          if (obj && (obj.type === "rect" || obj.type === "circle" || obj.type === "polygon")) {
+            currentFillObject = obj;
+            openFillModal();
+          } else {
+            alert("الرجاء اختيار شكل مغلق للتعبئة.");
+          }
+          activeTool = null;
+        });
       } else {
         console.log("الأداة غير متوفرة حالياً: " + tool);
       }
